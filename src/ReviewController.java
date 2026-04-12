@@ -1,4 +1,6 @@
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -10,6 +12,7 @@ public class ReviewController {
 
     public ReviewController() {
         reviews = new ArrayList<>();
+        loadReviewsFromFile();
     }
 
     public void addReview(Review review) {
@@ -31,6 +34,32 @@ public class ReviewController {
         }
     }
 
+    public void loadReviewsFromFile() {
+        reviews.clear();
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(FILE_NAME))) {
+            String line;
+
+            while ((line = reader.readLine()) != null) {
+                String[] data = line.split(",");
+
+                if (data.length == 5) {
+                    int id = Integer.parseInt(data[0]);
+                    String customer = data[1];
+                    String service = data[2];
+                    int rating = Integer.parseInt(data[3]);
+                    String comment = data[4];
+
+                    Review review = new Review(id, customer, service, rating, comment);
+                    reviews.add(review);
+                }
+            }
+
+        } catch (IOException e) {
+            System.out.println("Error reading file: " + e.getMessage());
+        }
+    }
+
     public void viewAllReviews() {
         if (reviews.isEmpty()) {
             System.out.println("No reviews found.");
@@ -48,6 +77,7 @@ public class ReviewController {
             if (review.getReviewId() == reviewId) {
                 review.setRating(newRating);
                 review.setComment(newComment);
+                rewriteFile();
                 System.out.println("Review updated successfully.");
                 return;
             }
@@ -60,11 +90,27 @@ public class ReviewController {
         for (int i = 0; i < reviews.size(); i++) {
             if (reviews.get(i).getReviewId() == reviewId) {
                 reviews.remove(i);
+                rewriteFile();
                 System.out.println("Review deleted successfully.");
                 return;
             }
         }
 
         System.out.println("Review not found.");
+    }
+
+    private void rewriteFile() {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILE_NAME))) {
+            for (Review review : reviews) {
+                writer.write(review.getReviewId() + "," +
+                        review.getCustomerName() + "," +
+                        review.getServiceName() + "," +
+                        review.getRating() + "," +
+                        review.getComment());
+                writer.newLine();
+            }
+        } catch (IOException e) {
+            System.out.println("Error rewriting file: " + e.getMessage());
+        }
     }
 }

@@ -2,12 +2,6 @@ public class Main {
     public static void main(String[] args) {
         ReviewController controller = new ReviewController();
 
-        Review review1 = new VerifiedReview(1, "Nimal", "Haircut", 5, "Excellent service");
-        Review review2 = new PublicReview(2, "Kamal", "Facial", 4, "Very good experience");
-
-        controller.addReview(review1);
-        controller.addReview(review2);
-
         System.out.println("\nAll Reviews:");
         controller.viewAllReviews();
 
