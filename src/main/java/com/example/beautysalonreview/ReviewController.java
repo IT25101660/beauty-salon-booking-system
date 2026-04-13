@@ -4,21 +4,28 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Handles CRUD operations for reviews, with file-based persistence.
+ * Reviews are stored in a plain text CSV file (reviews.txt).
+ */
 public class ReviewController {
     private List<Review> reviews;
     private final String FILE_NAME = "reviews.txt";
 
+    // Initializes the controller and loads existing reviews from file
     public ReviewController() {
         reviews = new ArrayList<>();
         loadReviewsFromFile();
     }
 
+    // Adds a review to the in-memory list and appends it to the file
     public void addReview(Review review) {
         reviews.add(review);
         saveReviewToFile(review);
         System.out.println("Review added successfully.");
     }
 
+    // Appends a single review as a comma-separated line to the file
     private void saveReviewToFile(Review review) {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILE_NAME, true))) {
             writer.write(review.getReviewId() + "," +
@@ -32,6 +39,7 @@ public class ReviewController {
         }
     }
 
+    // Reads all reviews from the file into the in-memory list
     public void loadReviewsFromFile() {
         reviews.clear();
 
@@ -58,6 +66,7 @@ public class ReviewController {
         }
     }
 
+    // Prints all reviews to the console
     public void viewAllReviews() {
         if (reviews.isEmpty()) {
             System.out.println("No reviews found.");
@@ -70,6 +79,7 @@ public class ReviewController {
         }
     }
 
+    // Updates the rating and comment of an existing review, then rewrites the file
     public void updateReview(int reviewId, int newRating, String newComment) {
         for (Review review : reviews) {
             if (review.getReviewId() == reviewId) {
@@ -84,6 +94,7 @@ public class ReviewController {
         System.out.println("Review not found.");
     }
 
+    // Removes a review by ID from the list and rewrites the file
     public void deleteReview(int reviewId) {
         for (int i = 0; i < reviews.size(); i++) {
             if (reviews.get(i).getReviewId() == reviewId) {
@@ -97,6 +108,7 @@ public class ReviewController {
         System.out.println("Review not found.");
     }
 
+    // Overwrites the file with the current in-memory review list
     private void rewriteFile() {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILE_NAME))) {
             for (Review review : reviews) {
@@ -116,6 +128,7 @@ public class ReviewController {
         return reviews;
     }
 
+    // Returns the review with the given ID, or null if not found
     public Review getReviewById(int reviewId) {
         for (Review review : reviews) {
             if (review.getReviewId() == reviewId) {

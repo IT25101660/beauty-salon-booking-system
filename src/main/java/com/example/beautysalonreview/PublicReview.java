@@ -1,5 +1,8 @@
 package com.example.beautysalonreview;
 
+/**
+ * A publicly visible review — displayed without any verification badge.
+ */
 public class PublicReview extends Review {
 
     public PublicReview() {
@@ -10,6 +13,7 @@ public class PublicReview extends Review {
         super(reviewId, customerName, serviceName, rating, comment);
     }
 
+    // Overrides display method to show type of review
     @Override
     public void displayReview() {
         System.out.println("=== Public Review ===");

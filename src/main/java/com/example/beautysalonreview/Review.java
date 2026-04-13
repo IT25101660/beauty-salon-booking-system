@@ -1,15 +1,20 @@
 package com.example.beautysalonreview;
 
+/**
+ * Base class representing a customer review for a beauty salon service.
+ */
 public class Review {
     private int reviewId;
     private String customerName;
     private String serviceName;
-    private int rating;
+    private int rating;                 // Expected range: 1–5
     private String comment;
 
+    // Default constructor
     public Review() {
     }
 
+    // Parameterized constructor to initialize a review object
     public Review(int reviewId, String customerName, String serviceName, int rating, String comment) {
         this.reviewId = reviewId;
         this.customerName = customerName;
@@ -18,6 +23,7 @@ public class Review {
         this.comment = comment;
     }
 
+    // Getters and Setters
     public int getReviewId() {
         return reviewId;
     }
@@ -58,6 +64,7 @@ public class Review {
         this.comment = comment;
     }
 
+    // Prints review details to the console
     public void displayReview() {
         System.out.println("Review ID: " + reviewId);
         System.out.println("Customer Name: " + customerName);
