@@ -10,11 +10,9 @@ public class Review {
     private String stylistName;
     private int rating;                 // Expected range: 1–5
     private String comment;
-    private String ownerToken;
 
     // Default constructor
     public Review() {
-        this.ownerToken = "";
     }
 
     // Parameterized constructor to initialize a review object
@@ -25,7 +23,6 @@ public class Review {
         this.stylistName = "";
         this.rating = rating;
         this.comment = comment;
-        this.ownerToken = "";
     }
 
     public Review(int reviewId, String customerName, String serviceName, String stylistName, int rating, String comment) {
@@ -35,17 +32,6 @@ public class Review {
         this.stylistName = stylistName == null ? "" : stylistName;
         this.rating = rating;
         this.comment = comment;
-        this.ownerToken = "";
-    }
-
-    public Review(int reviewId, String customerName, String serviceName, String stylistName, int rating, String comment, String ownerToken) {
-        this.reviewId = reviewId;
-        this.customerName = customerName;
-        this.serviceName = serviceName;
-        this.stylistName = stylistName == null ? "" : stylistName;
-        this.rating = rating;
-        this.comment = comment;
-        this.ownerToken = ownerToken == null ? "" : ownerToken;
     }
 
     // Getters and Setters
@@ -95,10 +81,6 @@ public class Review {
 
     public void setComment(String comment) {
         this.comment = comment;
-    }
-
-    public String getOwnerToken() {
-        return ownerToken;
     }
 
     public String getReviewType() {

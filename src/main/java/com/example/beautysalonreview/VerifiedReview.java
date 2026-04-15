@@ -17,10 +17,6 @@ public class VerifiedReview extends Review {
         super(reviewId, customerName, serviceName, stylistName, rating, comment);
     }
 
-    public VerifiedReview(int reviewId, String customerName, String serviceName, String stylistName, int rating, String comment, String ownerToken) {
-        super(reviewId, customerName, serviceName, stylistName, rating, comment, ownerToken);
-    }
-
     @Override
     public String getReviewType() {
         return "Verified";

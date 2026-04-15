@@ -3,6 +3,9 @@ package com.example.beautysalonreview;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 
 /**
  * Handles CRUD operations for reviews, with file-based persistence.
@@ -12,6 +15,16 @@ public class ReviewController {
     private List<Review> reviews;
     private final String FILE_NAME = "reviews.txt";
     private static final String V2_PREFIX = "v2|";
+
+    private static final String DEBUG_LOG_PATH = "debug-84f153.log";
+    private static void debugLog(String runId, String hypothesisId, String location, String message, String dataJson) {
+        try {
+            String line = "{\"sessionId\":\"84f153\",\"runId\":\"" + runId + "\",\"hypothesisId\":\"" + hypothesisId + "\",\"location\":\"" + location +
+                    "\",\"message\":\"" + message + "\",\"data\":" + dataJson + ",\"timestamp\":" + System.currentTimeMillis() + "}\n";
+            Files.writeString(Path.of(DEBUG_LOG_PATH), line, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+        } catch (Exception ignored) {
+        }
+    }
 
     // Initializes the controller and loads existing reviews from file
     public ReviewController() {
@@ -94,7 +107,7 @@ public class ReviewController {
 
     private static String serializeReview(Review review) {
         // v2 format:
-        // v2|id|customer|service|stylist|rating|comment|type|ownerToken
+        // v2|id|customer|service|stylist|rating|comment|type
         return V2_PREFIX +
                 review.getReviewId() + "|" +
                 escapeField(review.getCustomerName()) + "|" +
@@ -102,8 +115,7 @@ public class ReviewController {
                 escapeField(review.getStylistName()) + "|" +
                 review.getRating() + "|" +
                 escapeField(review.getComment()) + "|" +
-                escapeField(review.getReviewType()) + "|" +
-                escapeField(review.getOwnerToken());
+                escapeField(review.getReviewType());
     }
 
     private static Review createByType(
@@ -113,22 +125,28 @@ public class ReviewController {
             String service,
             String stylist,
             int rating,
-            String comment,
-            String ownerToken
+            String comment
     ) {
         if (type != null && type.equalsIgnoreCase("Verified")) {
-            return new VerifiedReview(id, customer, service, stylist, rating, comment, ownerToken);
+            return new VerifiedReview(id, customer, service, stylist, rating, comment);
         }
         if (type != null && type.equalsIgnoreCase("Public")) {
-            return new PublicReview(id, customer, service, stylist, rating, comment, ownerToken);
+            return new PublicReview(id, customer, service, stylist, rating, comment);
         }
         // Fallback: default to public review
-        return new PublicReview(id, customer, service, stylist, rating, comment, ownerToken);
+        return new PublicReview(id, customer, service, stylist, rating, comment);
     }
 
     // Reads all reviews from the file into the in-memory list
     public void loadReviewsFromFile() {
         reviews.clear();
+        // #region agent log
+        try {
+            File f = new File(FILE_NAME);
+            debugLog("pre-fix", "A", "ReviewController.java:loadReviewsFromFile", "Loading reviews from file",
+                    "{\"fileName\":\"" + FILE_NAME + "\",\"absPath\":\"" + f.getAbsolutePath().replace("\\", "\\\\") + "\",\"exists\":" + f.exists() + ",\"length\":" + f.length() + "}");
+        } catch (Exception ignored) {}
+        // #endregion
 
         try (BufferedReader reader = new BufferedReader(new FileReader(FILE_NAME))) {
             String line;
@@ -147,8 +165,8 @@ public class ReviewController {
                         int rating = Integer.parseInt(fields.get(4));
                         String comment = unescapeField(fields.get(5));
                         String type = unescapeField(fields.get(6));
-                        String ownerToken = fields.size() >= 8 ? unescapeField(fields.get(7)) : "";
-                        reviews.add(createByType(type, id, customer, service, stylist, rating, comment, ownerToken));
+                        // If older/newer v2 lines contain extra fields, ignore them safely.
+                        reviews.add(createByType(type, id, customer, service, stylist, rating, comment));
                     }
                     continue;
                 }
@@ -162,13 +180,17 @@ public class ReviewController {
                     int rating = Integer.parseInt(data[3]);
                     String comment = data[4];
 
-                    reviews.add(new PublicReview(id, customer, service, "", rating, comment, ""));
+                    reviews.add(new PublicReview(id, customer, service, "", rating, comment));
                 }
             }
 
         } catch (IOException e) {
             System.out.println("Error reading file: " + e.getMessage());
         }
+        // #region agent log
+        debugLog("pre-fix", "C", "ReviewController.java:loadReviewsFromFile", "Loaded reviews into memory",
+                "{\"count\":" + reviews.size() + "}");
+        // #endregion
     }
 
     // Prints all reviews to the console
@@ -186,17 +208,32 @@ public class ReviewController {
 
     // Updates the rating and comment of an existing review, then rewrites the file
     public void updateReview(int reviewId, int newRating, String newComment) {
+        // #region agent log
+        debugLog("pre-fix", "B", "ReviewController.java:updateReview", "Update requested",
+                "{\"reviewId\":" + reviewId + ",\"newRating\":" + newRating + ",\"commentLen\":" + (newComment == null ? 0 : newComment.length()) + ",\"inMemoryCount\":" + reviews.size() + "}");
+        // #endregion
         for (Review review : reviews) {
             if (review.getReviewId() == reviewId) {
                 review.setRating(newRating);
                 review.setComment(newComment);
                 rewriteFile();
+                // #region agent log
+                try {
+                    File f = new File(FILE_NAME);
+                    debugLog("pre-fix", "B", "ReviewController.java:updateReview", "Update applied and file rewritten",
+                            "{\"absPath\":\"" + f.getAbsolutePath().replace("\\", "\\\\") + "\",\"exists\":" + f.exists() + ",\"length\":" + f.length() + ",\"lastModified\":" + f.lastModified() + "}");
+                } catch (Exception ignored) {}
+                // #endregion
                 System.out.println("Review updated successfully.");
                 return;
             }
         }
 
         System.out.println("Review not found.");
+        // #region agent log
+        debugLog("pre-fix", "B", "ReviewController.java:updateReview", "Update failed: review not found",
+                "{\"reviewId\":" + reviewId + "}");
+        // #endregion
     }
 
     // Removes a review by ID from the list and rewrites the file
