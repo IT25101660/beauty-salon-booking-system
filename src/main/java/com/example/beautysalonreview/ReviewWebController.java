@@ -6,11 +6,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import java.io.File;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
-
 /**
  * Spring MVC controller that maps HTTP requests to review-related Thymeleaf views.
  */
@@ -18,15 +13,6 @@ import java.nio.file.StandardOpenOption;
 public class ReviewWebController {
 
     private ReviewController reviewController = new ReviewController();
-    private static final String DEBUG_LOG_PATH = "debug-84f153.log";
-    private static void debugLog(String runId, String hypothesisId, String location, String message, String dataJson) {
-        try {
-            String line = "{\"sessionId\":\"84f153\",\"runId\":\"" + runId + "\",\"hypothesisId\":\"" + hypothesisId + "\",\"location\":\"" + location +
-                    "\",\"message\":\"" + message + "\",\"data\":" + dataJson + ",\"timestamp\":" + System.currentTimeMillis() + "}\n";
-            Files.writeString(Path.of(DEBUG_LOG_PATH), line, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
-        } catch (Exception ignored) {
-        }
-    }
 
     // Shows the review submission form
     @GetMapping("/")
@@ -75,10 +61,6 @@ public class ReviewWebController {
             @RequestParam(required = false) String stylist,
             Model model
     ) {
-        // #region agent log
-        debugLog("pre-fix", "C", "ReviewWebController.java:showAdminReviews", "Rendering admin reviews",
-                "{\"service\":\"" + (service == null ? "" : service) + "\",\"stylist\":\"" + (stylist == null ? "" : stylist) + "\",\"count\":" + reviewController.getFilteredReviews(service, stylist).size() + "}");
-        // #endregion
         model.addAttribute("reviews", reviewController.getFilteredReviews(service, stylist));
         model.addAttribute("service", service == null ? "" : service);
         model.addAttribute("stylist", stylist == null ? "" : stylist);
@@ -107,11 +89,6 @@ public class ReviewWebController {
             @RequestParam int rating,
             @RequestParam String comment
     ) {
-        // #region agent log
-        File f = new File("reviews.txt");
-        debugLog("pre-fix", "B", "ReviewWebController.java:adminUpdateReview", "Admin update endpoint called",
-                "{\"reviewId\":" + reviewId + ",\"rating\":" + rating + ",\"commentLen\":" + (comment == null ? 0 : comment.length()) + ",\"reviewsAbsPath\":\"" + f.getAbsolutePath().replace("\\", "\\\\") + "\"}");
-        // #endregion
         reviewController.updateReview(reviewId, rating, comment);
         return "redirect:/admin/reviews";
     }
