@@ -12,8 +12,9 @@
             <div class="topbar__subtitle"></div>
         </div>
         <nav aria-label="Primary">
-            <a class="btn btn--secondary" href="/">Create</a>
-            <a class="btn btn--primary" href="/reviews">Reviews</a>
+            <a class="btn btn--primary" href="/">Create</a>
+            <a class="btn btn--secondary" href="/reviews">Reviews</a>
+            <a class="btn" href="/admin/reviews">Admin</a>
         </nav>
     </div>
 </header>
@@ -23,15 +24,31 @@
         <h2 class="title">Create a Review</h2>
         <p class="subtitle">Capture customer feedback with a clean, consistent format.</p>
 
-        <form action="/submitReview" method="post">
+        <div class="notice notice--success" th:if="${createdToken}" aria-label="Review created token">
+            <h3 class="notice__title">Review submitted successfully</h3>
+            <p class="notice__row">
+                <strong>Review ID:</strong> <span th:text="${createdReviewId}"></span>
+            </p>
+            <p class="notice__row">
+                <strong>Your Token:</strong> <span class="mono" th:text="${createdToken}"></span>
+            </p>
+            <p class="notice__row">
+                <strong>Important:</strong> Do not refresh this page (refresh may submit again). Save your token to edit/delete your review later.
+            </p>
+        </div>
+
+        <form action="/submitReview" method="post" onsubmit="const b=this.querySelector('button[type=submit]'); if(b){b.disabled=true; b.textContent='Submitting...';}">
             <label>Review ID</label>
-            <input type="number" name="reviewId" required>
+            <input type="number" name="reviewId" required th:value="${reviewId}">
 
             <label>Customer Name</label>
-            <input type="text" name="customerName" required>
+            <input type="text" name="customerName" required th:value="${customerName}">
 
             <label>Service Name</label>
-            <input type="text" name="serviceName" required>
+            <input type="text" name="serviceName" required th:value="${serviceName}">
+
+            <label>Stylist Name</label>
+            <input type="text" name="stylistName" placeholder="Optional (e.g., Kasun)" th:value="${stylistName}">
 
             <label>Rating</label>
             <select name="rating">
@@ -43,7 +60,13 @@
             </select>
 
             <label>Comment</label>
-            <textarea name="comment" rows="4" required></textarea>
+            <textarea name="comment" rows="4" required th:text="${comment}"></textarea>
+
+            <label>Review Type</label>
+            <select name="reviewType">
+                <option value="Public" th:selected="${reviewType == 'Public'}">Public</option>
+                <option value="Verified" th:selected="${reviewType == 'Verified'}">Verified</option>
+            </select>
 
             <button class="submit-btn" type="submit">Submit Review</button>
         </form>

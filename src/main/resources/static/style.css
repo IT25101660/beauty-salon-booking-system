@@ -326,6 +326,20 @@ select:focus {
     color: #374151;
     box-shadow: var(--shadow-sm);
     cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, color 0.15s ease, filter 0.15s ease;
+}
+
+.btn:hover,
+.btn:focus {
+    transform: translateY(-1px);
+    border-color: rgba(236, 72, 153, 0.35);
+    color: var(--pink-700);
+    box-shadow: 0 10px 20px rgba(16, 24, 40, 0.08);
+    outline: none;
+}
+
+.btn:active {
+    transform: translateY(0);
 }
 
 .btn--primary {
@@ -335,9 +349,128 @@ select:focus {
     box-shadow: 0 10px 20px rgba(236, 72, 153, 0.18);
 }
 
+.btn--primary:hover,
+.btn--primary:focus {
+    color: #fff;
+    box-shadow: 0 14px 28px rgba(236, 72, 153, 0.22);
+    filter: saturate(1.05);
+}
+
 .btn--secondary {
     background: var(--surface);
     color: #374151;
+}
+
+/* Compact button for filter forms */
+.submit-btn--compact {
+    width: auto;
+    padding: 10px 14px;
+    margin-top: 12px;
+}
+
+/* Filter form layout used on list/admin pages */
+.filter-form {
+    margin: 6px 0 18px;
+}
+
+.filter-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px 16px;
+    max-width: 760px;
+}
+
+@media (max-width: 720px) {
+    .filter-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Badges */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 0.78rem;
+    background: #fff7fb;
+    border: 1px solid rgba(236, 72, 153, 0.22);
+    color: var(--pink-700);
+    white-space: nowrap;
+}
+
+.badge--admin {
+    background: #eef2ff;
+    border-color: rgba(55, 48, 163, 0.18);
+    color: #3730a3;
+}
+
+/* Notices (success/errors/info) */
+.notice {
+    margin: 10px 0 18px;
+    padding: 12px 14px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    background: linear-gradient(180deg, var(--surface-2), #ffffff);
+    box-shadow: var(--shadow-sm);
+    color: #374151;
+}
+
+.notice--success {
+    border-color: rgba(34, 197, 94, 0.25);
+    background: linear-gradient(180deg, rgba(34, 197, 94, 0.08), #ffffff);
+}
+
+.notice__title {
+    margin: 0 0 8px;
+    font-size: 1.05rem;
+}
+
+.notice__row {
+    margin: 6px 0;
+}
+
+.mono {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 0.92em;
+}
+
+/* Manage card on review list */
+.manage-card {
+    margin: 12px 0 18px;
+    padding: 14px 16px 6px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    background: #ffffff;
+    box-shadow: var(--shadow-sm);
+}
+
+.manage-card__title {
+    margin: 0 0 6px;
+    font-size: 1.05rem;
+}
+
+.manage-card__subtitle {
+    margin: 0 0 12px;
+    color: var(--muted);
+    font-weight: 500;
+    font-size: 0.95rem;
+}
+
+/* Delete link variant */
+.delete-link {
+    border-color: rgba(159, 18, 57, 0.18);
+    color: #9f1239;
+    background: #fff1f2;
+}
+
+.delete-link:hover,
+.delete-link:focus {
+    border-color: rgba(159, 18, 57, 0.28);
+    background: #ffe4e6;
+    color: #9f1239;
 }
 
 /* =====================

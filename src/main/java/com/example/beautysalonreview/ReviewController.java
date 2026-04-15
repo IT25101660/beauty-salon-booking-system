@@ -11,6 +11,7 @@ import java.util.List;
 public class ReviewController {
     private List<Review> reviews;
     private final String FILE_NAME = "reviews.txt";
+    private static final String V2_PREFIX = "v2|";
 
     // Initializes the controller and loads existing reviews from file
     public ReviewController() {
@@ -28,15 +29,101 @@ public class ReviewController {
     // Appends a single review as a comma-separated line to the file
     private void saveReviewToFile(Review review) {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILE_NAME, true))) {
-            writer.write(review.getReviewId() + "," +
-                    review.getCustomerName() + "," +
-                    review.getServiceName() + "," +
-                    review.getRating() + "," +
-                    review.getComment());
+            writer.write(serializeReview(review));
             writer.newLine();
         } catch (IOException e) {
             System.out.println("Error writing to file: " + e.getMessage());
         }
+    }
+
+    private static String escapeField(String raw) {
+        if (raw == null) return "";
+        return raw
+                .replace("\\", "\\\\")
+                .replace("|", "\\|")
+                .replace("\r", "\\r")
+                .replace("\n", "\\n");
+    }
+
+    private static String unescapeField(String raw) {
+        if (raw == null) return "";
+        StringBuilder out = new StringBuilder();
+        boolean escaping = false;
+        for (int i = 0; i < raw.length(); i++) {
+            char c = raw.charAt(i);
+            if (escaping) {
+                if (c == 'n') out.append('\n');
+                else if (c == 'r') out.append('\r');
+                else out.append(c);
+                escaping = false;
+            } else if (c == '\\') {
+                escaping = true;
+            } else {
+                out.append(c);
+            }
+        }
+        if (escaping) out.append('\\');
+        return out.toString();
+    }
+
+    private static List<String> splitV2Fields(String payload) {
+        List<String> fields = new ArrayList<>();
+        StringBuilder current = new StringBuilder();
+        boolean escaping = false;
+        for (int i = 0; i < payload.length(); i++) {
+            char c = payload.charAt(i);
+            if (escaping) {
+                current.append('\\').append(c);
+                escaping = false;
+                continue;
+            }
+            if (c == '\\') {
+                escaping = true;
+                continue;
+            }
+            if (c == '|') {
+                fields.add(current.toString());
+                current.setLength(0);
+                continue;
+            }
+            current.append(c);
+        }
+        fields.add(current.toString());
+        return fields;
+    }
+
+    private static String serializeReview(Review review) {
+        // v2 format:
+        // v2|id|customer|service|stylist|rating|comment|type|ownerToken
+        return V2_PREFIX +
+                review.getReviewId() + "|" +
+                escapeField(review.getCustomerName()) + "|" +
+                escapeField(review.getServiceName()) + "|" +
+                escapeField(review.getStylistName()) + "|" +
+                review.getRating() + "|" +
+                escapeField(review.getComment()) + "|" +
+                escapeField(review.getReviewType()) + "|" +
+                escapeField(review.getOwnerToken());
+    }
+
+    private static Review createByType(
+            String type,
+            int id,
+            String customer,
+            String service,
+            String stylist,
+            int rating,
+            String comment,
+            String ownerToken
+    ) {
+        if (type != null && type.equalsIgnoreCase("Verified")) {
+            return new VerifiedReview(id, customer, service, stylist, rating, comment, ownerToken);
+        }
+        if (type != null && type.equalsIgnoreCase("Public")) {
+            return new PublicReview(id, customer, service, stylist, rating, comment, ownerToken);
+        }
+        // Fallback: default to public review
+        return new PublicReview(id, customer, service, stylist, rating, comment, ownerToken);
     }
 
     // Reads all reviews from the file into the in-memory list
@@ -47,8 +134,27 @@ public class ReviewController {
             String line;
 
             while ((line = reader.readLine()) != null) {
-                String[] data = line.split(",");
+                if (line.isBlank()) continue;
 
+                if (line.startsWith(V2_PREFIX)) {
+                    String payload = line.substring(V2_PREFIX.length());
+                    List<String> fields = splitV2Fields(payload);
+                    if (fields.size() >= 7) {
+                        int id = Integer.parseInt(fields.get(0));
+                        String customer = unescapeField(fields.get(1));
+                        String service = unescapeField(fields.get(2));
+                        String stylist = unescapeField(fields.get(3));
+                        int rating = Integer.parseInt(fields.get(4));
+                        String comment = unescapeField(fields.get(5));
+                        String type = unescapeField(fields.get(6));
+                        String ownerToken = fields.size() >= 8 ? unescapeField(fields.get(7)) : "";
+                        reviews.add(createByType(type, id, customer, service, stylist, rating, comment, ownerToken));
+                    }
+                    continue;
+                }
+
+                // Legacy CSV fallback: id,customer,service,rating,comment
+                String[] data = line.split(",", 5);
                 if (data.length == 5) {
                     int id = Integer.parseInt(data[0]);
                     String customer = data[1];
@@ -56,8 +162,7 @@ public class ReviewController {
                     int rating = Integer.parseInt(data[3]);
                     String comment = data[4];
 
-                    Review review = new Review(id, customer, service, rating, comment);
-                    reviews.add(review);
+                    reviews.add(new PublicReview(id, customer, service, "", rating, comment, ""));
                 }
             }
 
@@ -112,11 +217,7 @@ public class ReviewController {
     private void rewriteFile() {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILE_NAME))) {
             for (Review review : reviews) {
-                writer.write(review.getReviewId() + "," +
-                        review.getCustomerName() + "," +
-                        review.getServiceName() + "," +
-                        review.getRating() + "," +
-                        review.getComment());
+                writer.write(serializeReview(review));
                 writer.newLine();
             }
         } catch (IOException e) {
@@ -126,6 +227,28 @@ public class ReviewController {
 
     public List<Review> getAllReviews() {
         return reviews;
+    }
+
+    public List<Review> getFilteredReviews(String service, String stylist) {
+        String s1 = service == null ? "" : service.trim().toLowerCase();
+        String s2 = stylist == null ? "" : stylist.trim().toLowerCase();
+
+        if (s1.isEmpty() && s2.isEmpty()) {
+            return reviews;
+        }
+
+        List<Review> out = new ArrayList<>();
+        for (Review r : reviews) {
+            boolean ok = true;
+            if (!s1.isEmpty()) {
+                ok = r.getServiceName() != null && r.getServiceName().toLowerCase().contains(s1);
+            }
+            if (ok && !s2.isEmpty()) {
+                ok = r.getStylistName() != null && r.getStylistName().toLowerCase().contains(s2);
+            }
+            if (ok) out.add(r);
+        }
+        return out;
     }
 
     // Returns the review with the given ID, or null if not found
