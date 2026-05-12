@@ -41,5 +41,6 @@ public class VerifiedReview extends Review {
     public void displayReview() {
         System.out.println("=== Verified Review ===");
         super.displayReview();
+
     }
 }

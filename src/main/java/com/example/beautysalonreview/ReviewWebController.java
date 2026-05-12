@@ -6,8 +6,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import jakarta.servlet.http.HttpSession; // NEW: Added for session tracking
+import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -18,23 +19,30 @@ public class ReviewWebController {
 
     private final ReviewController reviewController = new ReviewController();
     private final ReviewFileManager reviewFileManager = new ReviewFileManager();
+    // NEW: We need the ServiceFileManager to fetch the dynamic dropdown list!
+    private final ServiceFileManager serviceFileManager = new ServiceFileManager();
 
     // ==========================================================
-    // NEW: PUBLIC REVIEW ROUTING
+    // PUBLIC REVIEW ROUTING
     // ==========================================================
     
     @GetMapping("/public-review")
     public String showPublicReviewPage(HttpSession session, Model model) {
         String loggedInName = (String) session.getAttribute("loggedInCustomerName");
         
-        // Security Bouncer: Boot them to login if they aren't signed in
         if (loggedInName == null) {
             return "redirect:/customers?action=login";
         }
         
-        // Pre-fill and lock their exact name!
         model.addAttribute("customerName", loggedInName);
-        
+
+        // FIXED: Fetch services from the text file and pass them to the HTML dropdown
+        try {
+            model.addAttribute("services", serviceFileManager.readAllServices());
+        } catch (IOException e) {
+            System.err.println("Error loading services for the review form: " + e.getMessage());
+        }
+
         return "public-review-form"; 
     }
 
@@ -47,9 +55,11 @@ public class ReviewWebController {
             @RequestParam int rating,
             @RequestParam String comment
     ) {
+        // Staff cannot submit public reviews unless they are a manager
         if (session.getAttribute("staffRole") != null && !SecurityUtils.isManager(session)) {
             return "redirect:/admin?error=unauthorized";
         }
+
         int newId = 5001;
         try {
             newId = reviewFileManager.generateNextReviewId();
@@ -57,83 +67,16 @@ public class ReviewWebController {
 
         String ownerToken = UUID.randomUUID().toString();
         
-        // Automatically make it a Verified Review because they are a logged-in user!
-        Review review = new VerifiedReview(newId, customerName, serviceName, stylistName, rating, comment, ownerToken);
+        // 1. UPDATED: Newly submitted reviews default to unverified (false)
+        Review review = new Review(newId, customerName, serviceName, stylistName, rating, comment, ownerToken, false);
         reviewController.addReview(review);
 
-        // Send them straight back to their portal!
         return "redirect:/my-portal";
     }
 
     // ==========================================================
-    // EXISTING ADMIN / GENERAL ROUTING
+    // ADMIN / GENERAL ROUTING
     // ==========================================================
-
-    @GetMapping("/review-home")
-    public String showHomePage(Model model) {
-        try {
-            model.addAttribute("generatedReviewId", reviewFileManager.generateNextReviewId());
-        } catch (IOException ignored) {
-            model.addAttribute("generatedReviewId", 5001); 
-        }
-        
-        model.addAttribute("customerName", "");
-        model.addAttribute("serviceName", "");
-        model.addAttribute("stylistName", "");
-        model.addAttribute("rating", 5);
-        model.addAttribute("comment", "");
-        model.addAttribute("reviewType", "Public");
-        return "review-form";
-    }
-
-    @PostMapping("/submitReview")
-    public String submitReview(
-            HttpSession session,
-            @RequestParam(required = false) Integer reviewId, 
-            @RequestParam String customerName,
-            @RequestParam String serviceName,
-            @RequestParam(required = false) String stylistName,
-            @RequestParam int rating,
-            @RequestParam String comment,
-            @RequestParam(defaultValue = "Public") String reviewType,
-            Model model
-    ) {
-        if (session.getAttribute("staffRole") != null && !SecurityUtils.isManager(session)) {
-            return "redirect:/admin?error=unauthorized";
-        }
-        int newId = 5001;
-        try {
-            newId = reviewFileManager.generateNextReviewId();
-        } catch (IOException ignored) {}
-
-        String ownerToken = UUID.randomUUID().toString();
-        Review review;
-        if ("Verified".equalsIgnoreCase(reviewType)) {
-            review = new VerifiedReview(newId, customerName, serviceName, stylistName, rating, comment, ownerToken);
-        } else {
-            review = new PublicReview(newId, customerName, serviceName, stylistName, rating, comment, ownerToken);
-        }
-        reviewController.addReview(review);
-
-        model.addAttribute("createdToken", ownerToken);
-        model.addAttribute("createdReviewId", newId);
-        model.addAttribute("createdManageUrl", "/editReview?id=" + newId + "&token=" + ownerToken);
-
-        try {
-            model.addAttribute("generatedReviewId", reviewFileManager.generateNextReviewId());
-        } catch (IOException ignored) {
-            model.addAttribute("generatedReviewId", newId + 1);
-        }
-        
-        model.addAttribute("customerName", "");
-        model.addAttribute("serviceName", "");
-        model.addAttribute("stylistName", "");
-        model.addAttribute("rating", 5);
-        model.addAttribute("comment", "");
-        model.addAttribute("reviewType", "Public");
-
-        return "review-form";
-    }
 
     @GetMapping("/reviews")
     public String showReviewsPage(
@@ -147,99 +90,6 @@ public class ReviewWebController {
         model.addAttribute("stylist", stylist == null ? "" : stylist);
         model.addAttribute("error", error == null ? "" : error);
         return "review-list";
-    }
-
-    @GetMapping("/manageReview")
-    public String manageReview(
-            @RequestParam(required = false) Integer id,
-            @RequestParam(required = false) String token,
-            HttpSession session) {
-        if (session.getAttribute("staffRole") != null && !SecurityUtils.isManager(session)) {
-            return "redirect:/admin?error=unauthorized";
-        }
-        if (id == null || token == null || token.isBlank()) {
-            return "redirect:/reviews?error=invalid";
-        }
-        Review review = reviewController.getReviewById(id);
-        if (review == null) {
-            return "redirect:/reviews?error=notfound";
-        }
-        if (review.getOwnerToken() == null || review.getOwnerToken().isBlank() || !review.getOwnerToken().equals(token)) {
-            return "redirect:/reviews?error=invalid";
-        }
-        return "redirect:/editReview?id=" + id + "&token=" + token;
-    }
-
-    @GetMapping("/editReview")
-    public String showEditPage(
-            @RequestParam(required = false) Integer id,
-            @RequestParam(required = false) String token,
-            HttpSession session,
-            Model model) {
-        if (session.getAttribute("staffRole") != null && !SecurityUtils.isManager(session)) {
-            return "redirect:/admin?error=unauthorized";
-        }
-        if (id == null || token == null || token.isBlank()) {
-            return "redirect:/reviews?error=invalid";
-        }
-        Review review = reviewController.getReviewById(id);
-        if (review == null) {
-            return "redirect:/reviews?error=notfound";
-        }
-        if (review.getOwnerToken() == null || review.getOwnerToken().isBlank() || !review.getOwnerToken().equals(token)) {
-            return "redirect:/reviews?error=invalid";
-        }
-        model.addAttribute("review", review);
-        model.addAttribute("token", token);
-        model.addAttribute("formAction", "/updateReview");
-        return "review-edit";
-    }
-
-    @PostMapping("/updateReview")
-    public String updateReview(
-            @RequestParam(required = false) Integer reviewId,
-            @RequestParam(required = false) Integer rating,
-            @RequestParam(required = false) String comment,
-            @RequestParam(required = false) String token,
-            HttpSession session
-    ) {
-        if (session.getAttribute("staffRole") != null && !SecurityUtils.isManager(session)) {
-            return "redirect:/admin?error=unauthorized";
-        }
-        if (reviewId == null || rating == null || comment == null || token == null || token.isBlank()) {
-            return "redirect:/reviews?error=invalid";
-        }
-        Review review = reviewController.getReviewById(reviewId);
-        if (review == null) {
-            return "redirect:/reviews?error=notfound";
-        }
-        if (review.getOwnerToken() == null || review.getOwnerToken().isBlank() || !review.getOwnerToken().equals(token)) {
-            return "redirect:/reviews?error=invalid";
-        }
-        reviewController.updateReview(reviewId, rating, comment);
-        return "redirect:/reviews";
-    }
-
-    @GetMapping("/deleteReview")
-    public String deleteReview(
-            @RequestParam(required = false) Integer id,
-            @RequestParam(required = false) String token,
-            HttpSession session) {
-        if (session.getAttribute("staffRole") != null && !SecurityUtils.isManager(session)) {
-            return "redirect:/admin?error=unauthorized";
-        }
-        if (id == null || token == null || token.isBlank()) {
-            return "redirect:/reviews?error=invalid";
-        }
-        Review review = reviewController.getReviewById(id);
-        if (review == null) {
-            return "redirect:/reviews?error=notfound";
-        }
-        if (review.getOwnerToken() == null || review.getOwnerToken().isBlank() || !review.getOwnerToken().equals(token)) {
-            return "redirect:/reviews?error=invalid";
-        }
-        reviewController.deleteReview(id);
-        return "redirect:/reviews";
     }
 
     @GetMapping("/admin/reviews")
@@ -258,6 +108,28 @@ public class ReviewWebController {
         return "admin-review-control";
     }
 
+    @GetMapping("/admin/reviews/toggle")
+    public String toggleReviewStatus(@RequestParam Integer id, HttpSession session) {
+        if (session.getAttribute("staffRole") == null) {
+            return "redirect:/staff-login";
+        }
+        if (!SecurityUtils.isManager(session)) {
+            return "redirect:/admin/reviews?error=unauthorized";
+        }
+        
+        // 2. UPDATED: Flips the boolean and saves directly to the text file
+        List<Review> allReviews = reviewFileManager.readAllReviews();
+        for (Review r : allReviews) {
+            if (r.getReviewId() == id) {
+                r.setVerified(!r.isVerified()); // Flips true to false, or false to true
+                reviewFileManager.updateReview(r); // Saves the change permanently
+                break;
+            }
+        }
+        
+        return "redirect:/admin/reviews";
+    }
+
     @GetMapping("/admin/deleteReview")
     public String adminDeleteReview(@RequestParam(required = false) Integer id, HttpSession session) {
         if (session.getAttribute("staffRole") == null) {
@@ -266,51 +138,54 @@ public class ReviewWebController {
         if (!SecurityUtils.isManager(session)) {
             return "redirect:/admin?error=unauthorized";
         }
-        if (id == null) {
-            return "redirect:/admin/reviews";
+        if (id != null) {
+            reviewController.deleteReview(id);
         }
-        reviewController.deleteReview(id);
         return "redirect:/admin/reviews";
     }
 
-    @GetMapping("/admin/editReview")
-    public String adminEditReview(@RequestParam(required = false) Integer id, HttpSession session, Model model) {
-        if (session.getAttribute("staffRole") == null) {
-            return "redirect:/staff-login";
+    // ==========================================================
+    // CUSTOMER PORTAL - SELF-EDIT LOGIC
+    // ==========================================================
+
+    @GetMapping("/editReview")
+    public String showEditPage(@RequestParam Integer id, HttpSession session, Model model) {
+        String loggedInCustomer = (String) session.getAttribute("loggedInCustomerName");
+
+        if (loggedInCustomer == null) {
+            return "redirect:/customers?action=login";
         }
-        if (!SecurityUtils.isManager(session)) {
-            return "redirect:/admin?error=unauthorized";
-        }
-        if (id == null) {
-            return "redirect:/admin/reviews";
-        }
+
         Review review = reviewController.getReviewById(id);
-        if (review == null) {
-            return "redirect:/admin/reviews";
+
+        if (review != null && review.getCustomerName().equalsIgnoreCase(loggedInCustomer)) {
+            model.addAttribute("review", review);
+            return "review-edit";
         }
-        model.addAttribute("review", review);
-        model.addAttribute("token", "");
-        model.addAttribute("formAction", "/admin/updateReview");
-        return "review-edit";
+
+        return "redirect:/my-portal?error=unauthorized";
     }
 
-    @PostMapping("/admin/updateReview")
-    public String adminUpdateReview(
-            @RequestParam(required = false) Integer reviewId,
-            @RequestParam(required = false) Integer rating,
-            @RequestParam(required = false) String comment,
+    @PostMapping("/updateReview")
+    public String updateReview(
+            @RequestParam Integer reviewId,
+            @RequestParam Integer rating,
+            @RequestParam String comment,
             HttpSession session
     ) {
-        if (session.getAttribute("staffRole") == null) {
-            return "redirect:/staff-login";
+        String loggedInCustomer = (String) session.getAttribute("loggedInCustomerName");
+
+        if (loggedInCustomer == null) {
+            return "redirect:/customers?action=login";
         }
-        if (!SecurityUtils.isManager(session)) {
-            return "redirect:/admin?error=unauthorized";
+
+        Review review = reviewController.getReviewById(reviewId);
+        
+        if (review != null && review.getCustomerName().equalsIgnoreCase(loggedInCustomer)) {
+            reviewController.updateReview(reviewId, rating, comment);
+            return "redirect:/my-portal?status=updated";
         }
-        if (reviewId == null || rating == null || comment == null) {
-            return "redirect:/admin/reviews";
-        }
-        reviewController.updateReview(reviewId, rating, comment);
-        return "redirect:/admin/reviews";
+
+        return "redirect:/my-portal?error=failed";
     }
 }

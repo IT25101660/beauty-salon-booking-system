@@ -41,5 +41,6 @@ public class PublicReview extends Review {
     public void displayReview() {
         System.out.println("=== Public Review ===");
         super.displayReview();
+
     }
 }

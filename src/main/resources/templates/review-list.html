@@ -1,79 +1,149 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Review List</title>
-    <link rel="stylesheet" href="/style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Reviews | Lumière Salon</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <link rel="stylesheet" th:href="@{/lumiere-theme.css(v='2.0')}">
+    
+    <style>
+        .filter-container {
+            background: #fdf8f9; padding: 1.5rem; border-radius: 1rem;
+            border: 1px solid #f2e4e8; margin-bottom: 2rem;
+        }
+        .badge-review {
+            background-color: #fcf1f4; color: #b37a8c;
+            font-weight: 600; padding: 0.5em 1em; border: 1px solid #f2d7df;
+        }
+        .rating-star { color: #ffc107; margin-right: 4px; }
+    </style>
 </head>
-<body>
 
-<header class="site-header" aria-label="Salon dashboard header">
-    <div class="inner">
-        <div>
-            <div class="topbar__title">Beauty Salon Reviews</div>
-            <div class="topbar__subtitle"></div>
-        </div>
-        <nav aria-label="Primary">
-            <a class="btn btn--secondary" href="/admin">Return to Dashboard</a>
-            <a class="btn btn--primary" href="/reviews">Reviews</a>
-            <a class="btn" href="/admin/reviews">Admin</a>
-        </nav>
-    </div>
-</header>
-
-<main class="page-wrapper page-wrapper--list" aria-label="Review list page">
-    <div class="container container--list">
-
-        <h2 class="title">All Reviews</h2>
-        <p class="subtitle">View customer feedback (filter by service or stylist)</p>
-
-        <form class="filter-form" action="/reviews" method="get" aria-label="Filter reviews">
-            <div class="filter-grid">
+<body class="admin-body py-5"> <div class="container">
+    
+    <div class="row align-items-center mb-5">
+        <div class="col-lg-6 mb-3 mb-lg-0">
+            <div class="d-flex align-items-center">
+                <div class="logo-circle me-3">L</div>
                 <div>
-                    <label for="service-filter">Service</label>
-                    <input id="service-filter" type="text" name="service" placeholder="e.g., Haircut" th:value="${service}">
-                </div>
-                <div>
-                    <label for="stylist-filter">Stylist</label>
-                    <input id="stylist-filter" type="text" name="stylist" placeholder="e.g., Nethmi" th:value="${stylist}">
+                    <h1 class="h2 mb-0">Customer Reviews</h1>
+                    <p class="text-secondary mb-0">Manage and analyze guest feedback with ease.</p>
                 </div>
             </div>
-            <button class="submit-btn submit-btn--compact" type="submit">Filter</button>
+        </div>
+        <div class="col-lg-6 text-lg-end">
+            <div class="d-flex flex-wrap gap-2 justify-content-lg-end">
+                <a th:href="@{/admin}" class="btn btn-lumiere-outline">
+                    <i class="bi bi-arrow-left me-2"></i>Dashboard
+                </a>
+                <a th:href="@{/admin/reviews}" class="btn btn-lumiere">
+                    <i class="bi bi-shield-check me-2"></i>Admin Control
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="filter-container shadow-sm">
+        <form action="/reviews" method="get" class="row g-3 align-items-end">
+            <div class="col-md-5">
+                <label class="form-label small fw-bold text-uppercase text-muted" for="service-filter">Filter by Service</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-scissors"></i></span>
+                    <input id="service-filter" type="text" name="service" class="form-control border-start-0" 
+                           placeholder="e.g., Haircut" th:value="${service}">
+                </div>
+            </div>
+            <div class="col-md-5">
+                <label class="form-label small fw-bold text-uppercase text-muted" for="stylist-filter">Filter by Stylist</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-person-heart"></i></span>
+                    <input id="stylist-filter" type="text" name="stylist" class="form-control border-start-0" 
+                           placeholder="e.g., Nethmi" th:value="${stylist}">
+                </div>
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-lumiere w-100 shadow-sm" type="submit">
+                    <i class="bi bi-funnel me-2"></i>Apply
+                </button>
+            </div>
         </form>
+    </div>
 
-        <div class="table-responsive">
-        <table class="review-table">
-            <thead>
-            <tr>
-                <th>Review ID</th>
-                <th>Type</th>
-                <th>Customer</th>
-                <th>Service</th>
-                <th>Stylist</th>
-                <th>Rating</th>
-                <th>Comment</th>
-            </tr>
-            </thead>
-
-            <tbody>
-            <tr th:each="review : ${reviews}">
-                <td th:text="${review.reviewId}"></td>
-                <td>
-                    <span class="badge" th:text="${review.customerViewHeader}"></span>
-                </td>
-                <td th:text="${review.customerName}"></td>
-                <td th:text="${review.serviceName}"></td>
-                <td th:text="${review.stylistName}"></td>
-                <td th:text="${review.rating}"></td>
-                <td th:text="${review.comment}"></td>
-            </tr>
-            </tbody>
-        </table>
+    <div class="card panel">
+        <div class="panel-header">
+            <h2 class="h5 mb-0"><i class="bi bi-chat-quote me-2"></i>Feedback Directory</h2>
         </div>
 
-        <a class="view-link" href="/admin/reviews">Admin Review Control</a>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                    <tr>
+                        <th class="ps-4">ID</th>
+                        <th>Type</th>
+                        <th>Customer</th>
+                        <th>Service</th>
+                        <th>Stylist</th>
+                        <th class="text-center">Rating</th>
+                        <th class="pe-4">Comment</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="review : ${reviews}">
+                        <td class="ps-4 text-muted small" th:text="${review.reviewId}"></td>
+                        
+                        <td>
+                            <span th:if="${!review.verified}" class="badge rounded-pill badge-review">
+                                Customer Review
+                            </span>
+                            <span th:if="${review.verified}" class="badge rounded-pill badge-verified">
+                                <i class="bi bi-patch-check-fill me-1"></i>Verified Review
+                            </span>
+                        </td>
 
+                        <td>
+                            <div class="fw-bold" th:text="${review.customerName}"></div>
+                        </td>
+                        <td th:text="${review.serviceName}"></td>
+                        <td>
+                            <i class="bi bi-person-check text-muted me-1"></i>
+                            <span th:text="${review.stylistName}"></span>
+                        </td>
+                        <td class="text-center">
+                            <span class="fw-bold text-dark">
+                                <i class="bi bi-star-fill rating-star"></i>
+                                <span th:text="${review.rating}"></span>
+                            </span>
+                        </td>
+                        <td class="pe-4">
+                            <p class="small text-muted mb-0" style="max-width: 350px; line-height: 1.4;" th:text="${review.comment}"></p>
+                        </td>
+                    </tr>
+                    
+                    <tr th:if="${#lists.isEmpty(reviews)}">
+                        <td colspan="7" class="text-center py-5 text-secondary">
+                            <i class="bi bi-chat-dots display-4 d-block mb-3 opacity-25"></i>
+                            <p class="mb-0">No reviews found matching your filters.</p>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
-</main>
 
+    <div class="text-center mt-4">
+        <a th:href="@{/admin/reviews}" class="text-muted text-decoration-none small">
+            Access Advanced Review Management →
+        </a>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
