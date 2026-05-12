@@ -1,3 +1,0 @@
-v2|1|Nimal|Haircut||4|Great service|Public
-v2|2|Alex|Facial|Nalika|3|Worth it!|Public
-v2|8|JJ|Facial|Nalika|4|Good|Verified
