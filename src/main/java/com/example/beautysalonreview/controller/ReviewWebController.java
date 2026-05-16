@@ -1,4 +1,12 @@
-package com.example.beautysalonreview;
+package com.example.beautysalonreview.controller;
+
+import com.example.beautysalonreview.model.*;
+import com.example.beautysalonreview.controller.*;
+import com.example.beautysalonreview.repository.*;
+import com.example.beautysalonreview.util.*;
+
+
+
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -187,5 +195,26 @@ public class ReviewWebController {
         }
 
         return "redirect:/my-portal?error=failed";
+    }
+
+    @PostMapping("/deleteReview")
+    public String deleteCustomerReview(
+            @RequestParam Integer reviewId,
+            HttpSession session
+    ) {
+        String loggedInCustomer = (String) session.getAttribute("loggedInCustomerName");
+
+        if (loggedInCustomer == null) {
+            return "redirect:/customers?action=login";
+        }
+
+        Review review = reviewController.getReviewById(reviewId);
+
+        if (review != null && review.getCustomerName().equalsIgnoreCase(loggedInCustomer)) {
+            reviewController.deleteReview(reviewId);
+            return "redirect:/my-portal?status=deleted";
+        }
+
+        return "redirect:/my-portal?error=unauthorized";
     }
 }

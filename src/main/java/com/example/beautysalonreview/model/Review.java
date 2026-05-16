@@ -1,4 +1,12 @@
-package com.example.beautysalonreview;
+package com.example.beautysalonreview.model;
+
+import com.example.beautysalonreview.model.*;
+import com.example.beautysalonreview.controller.*;
+import com.example.beautysalonreview.repository.*;
+import com.example.beautysalonreview.util.*;
+
+
+
 
 /**
  * Base class representing a customer review for a beauty salon service.

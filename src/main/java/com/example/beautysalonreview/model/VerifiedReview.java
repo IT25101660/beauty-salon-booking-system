@@ -1,4 +1,12 @@
-package com.example.beautysalonreview;
+package com.example.beautysalonreview.model;
+
+import com.example.beautysalonreview.model.*;
+import com.example.beautysalonreview.controller.*;
+import com.example.beautysalonreview.repository.*;
+import com.example.beautysalonreview.util.*;
+
+
+
 
 /**
  * A review from a verified customer, displayed with a verification header.
@@ -41,6 +49,5 @@ public class VerifiedReview extends Review {
     public void displayReview() {
         System.out.println("=== Verified Review ===");
         super.displayReview();
-
     }
 }

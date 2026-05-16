@@ -1,4 +1,12 @@
-package com.example.beautysalonreview;
+package com.example.beautysalonreview.model;
+
+import com.example.beautysalonreview.model.*;
+import com.example.beautysalonreview.controller.*;
+import com.example.beautysalonreview.repository.*;
+import com.example.beautysalonreview.util.*;
+
+
+
 
 /**
  * A publicly visible review — displayed without any verification badge.
@@ -41,6 +49,5 @@ public class PublicReview extends Review {
     public void displayReview() {
         System.out.println("=== Public Review ===");
         super.displayReview();
-
     }
 }
