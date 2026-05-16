@@ -19,15 +19,15 @@ import java.io.IOException;
 import java.util.List;
 
 @Controller
-public class ServiceWebController {
+public class   ServiceWebController {
 
     private final ServiceFileManager serviceFileManager = new ServiceFileManager();
     // NEW: Inject StylistFileManager to fetch available stylists for assignment
-    private final StylistFileManager stylistFileManager = new StylistFileManager();
+    private final  StylistFileManager stylistFileManager = new StylistFileManager();
 
     @GetMapping("/services")
     public String handleServicesGet(
-            @RequestParam(defaultValue = "list") String action,
+            @RequestParam(defaultValue = "list")  String action,
             @RequestParam(required = false) Integer serviceId,
             HttpSession session,
             Model model
@@ -145,7 +145,7 @@ public class ServiceWebController {
         return "redirect:/services?action=list";
     }
 
-    private SalonService findById(int serviceId) throws IOException {
+    private SalonService  findById(int serviceId) throws IOException {
         return serviceFileManager.readAllServices().stream()
                 .filter(service -> service.getServiceId() == serviceId)
                 .findFirst().orElse(null);
