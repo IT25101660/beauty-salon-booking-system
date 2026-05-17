@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Lumière Portal | Premium Salon</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <link rel="stylesheet" th:href="@{/lumiere-theme.css(v='2.0')}">
+    
+    <style>
+        /* Forces the navbar back to luxury white instead of admin pink */
+        body.customer-portal .navbar {
+            background-color: white !important;
+            border-bottom: 1px solid rgba(217, 165, 179, 0.2);
+            padding: 1rem 0;
+        }
+        body.customer-portal .navbar-brand {
+            color: var(--lumiere-dark) !important;
+        }
+        body.customer-portal .logo-circle {
+            width: 40px; 
+            height: 40px; 
+            font-size: 1.3rem; 
+            margin-bottom: 0; 
+            margin-right: 12px; /* Restored breathing room */
+            box-shadow: 0 4px 8px rgba(217, 165, 179, 0.3);
+        }
+
+        /* Forces the panel headers back to soft pink/white instead of full gradient */
+        body.customer-portal .panel-header {
+            background: #fcf6f8 !important;
+            border-bottom: 1px solid #f2e4e8;
+            padding: 1.5rem 2rem;
+            text-align: left;
+        }
+
+        /* Restores the Review Card hover effects */
+        .review-card-item {
+            border-bottom: 1px solid #f8ebef;
+            transition: background 0.3s ease;
+        }
+        .review-card-item:last-child { border-bottom: none; }
+        .review-card-item:hover { background-color: #fffdfd; }
+
+        /* Restores the missing Edit Button styling */
+        .btn-edit-sm {
+            font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.5px; color: var(--lumiere-pink); text-decoration: none;
+            border: 1px solid var(--lumiere-pink); padding: 0.4rem 1rem;
+            border-radius: 50px; transition: all 0.3s ease; display: inline-block;
+            background-color: transparent;
+        }
+        .btn-edit-sm:hover { background: var(--lumiere-pink); color: white; }
+
+        /* Restores the missing Completed/Status Badges */
+        .badge-status { padding: 0.5em 1em; font-weight: 600; border-radius: 50px; }
+        .status-confirmed { background-color: #d1e7dd; color: #0f5132; }
+        .status-pending { background-color: #fff3cd; color: #664d03; }
+        .status-completed { background-color: #e2f0d9; color: #2e7d32; }
+        .status-cancelled { background-color: #f8f9fa; color: #6c757d; border: 1px solid #dee2e6; }
+        
+        .star-rating { color: #f8c102; font-size: 0.9rem; }
+    </style>
+</head>
+
+<body class="customer-portal"> <nav class="navbar sticky-top shadow-sm">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="/">
+                <div class="logo-circle">L</div>
+                <span class="fs-4 tracking-wider">LUMIÈRE</span>
+            </a>
+            <div class="d-flex align-items-center">
+                <span class="text-muted me-3 d-none d-md-inline small">Welcome, <strong th:text="${userName}">User</strong></span>
+                <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3 fw-bold me-2" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
+                    <i class="bi bi-key"></i> <span class="d-none d-sm-inline">Password</span>
+                </button>
+                <a href="/logout" class="btn btn-outline-danger btn-sm rounded-pill px-3 fw-bold">Sign Out</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-5">
+        
+        <div th:if="${param.error != null and param.error[0] == 'late_cancel'}" class="alert alert-danger alert-dismissible fade show rounded-4 shadow-sm border-0 mb-4" role="alert" style="background-color: #fdf1f4; color: #a62a4b;">
+            <i class="bi bi-exclamation-octagon-fill me-2"></i> <strong>Cancellation Failed:</strong> Appointments cannot be cancelled online within 24 hours of the scheduled time. Please contact the salon directly.
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <div th:if="${param.status != null and param.status[0] == 'updated'}" class="alert alert-success alert-dismissible fade show rounded-4 shadow-sm border-0 mb-4" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i> <strong>Sparkle Updated!</strong> Your review has been successfully modified.
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <div th:if="${param.status != null and param.status[0] == 'deleted'}" class="alert alert-success alert-dismissible fade show rounded-4 shadow-sm border-0 mb-4" role="alert">
+            <i class="bi bi-trash3-fill me-2"></i> <strong>Review Deleted!</strong> Your review has been removed from your portal.
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <div th:if="${param.passwordStatus != null and param.passwordStatus[0] == 'updated'}" class="alert alert-success alert-dismissible fade show rounded-4 shadow-sm border-0 mb-4" role="alert">
+            <i class="bi bi-shield-lock-fill me-2"></i> <strong>Secured!</strong> Your password has been successfully updated.
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <div class="portal-welcome text-center text-md-start mb-4">
+            <h2 class="display-6 mb-2">My Lumière Portal</h2>
+            <p class="text-secondary">Manage your upcoming beauty sessions and review your past transformations.</p>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card panel mb-4">
+                    <div class="panel-header d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0 h5"><i class="bi bi-calendar-event me-2 text-pink" style="color: var(--lumiere-pink);"></i>Upcoming Sessions</h4>
+                        <span class="badge rounded-pill bg-white text-pink border small" style="color: var(--lumiere-pink);" th:text="${#lists.size(myAppointments)} + ' Active'">1 Active</span>
+                    </div>
+                    
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="ps-4">Service</th>
+                                        <th>Date & Time</th>
+                                        <th class="text-end pe-4">Status & Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="appt : ${myAppointments}">
+                                        <td class="ps-4">
+                                            <div class="fw-bold text-dark" th:text="${appt.serviceName}">Service Name</div>
+                                            <div class="small text-muted" th:text="'with ' + ${appt.stylistName}">Stylist</div>
+                                        </td>
+                                        <td>
+                                            <div class="small"><i class="bi bi-calendar3 me-2"></i><span th:text="${appt.appointmentDate}">Date</span></div>
+                                            <div class="small text-muted"><i class="bi bi-clock me-2"></i><span th:text="${appt.formattedAppointmentTime}">Time</span></div>
+                                        </td>
+                                        <td class="text-end pe-4">
+                                            <span th:classappend="${'status-' + #strings.toLowerCase(appt.status)}" 
+                                                  class="badge-status small text-uppercase tracking-wide d-inline-block mb-2 mb-sm-0 me-sm-2" 
+                                                  th:text="${appt.status}">Status</span>
+                                            
+                                            <form th:if="${appt.status == 'Pending' or appt.status == 'Confirmed'}" th:action="@{/appointments}" method="post" class="d-inline">
+                                                <input type="hidden" name="action" value="public-cancel">
+                                                <input type="hidden" name="appointmentId" th:value="${appt.appointmentId}">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill fw-bold" onclick="return confirm('Are you sure you want to cancel this appointment?');">
+                                                    Cancel
+                                                </button>
+                                            </form>
+
+                                            <a th:if="${appt.status == 'Completed'}" th:href="@{/receipt(appointmentId=${appt.appointmentId})}" class="btn btn-sm btn-outline-warning rounded-pill fw-bold text-dark px-3">
+                                                <i class="bi bi-receipt me-1"></i> Receipt
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    <tr th:if="${#lists.isEmpty(myAppointments)}">
+                                        <td colspan="3" class="text-center py-5 text-muted">No upcoming appointments scheduled.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card panel mb-4">
+                    <div class="panel-header">
+                        <h4 class="mb-0 h5"><i class="bi bi-chat-heart me-2 text-pink" style="color: var(--lumiere-pink);"></i>My Feedback</h4>
+                    </div>
+                    <div class="card-body p-0">
+                        <div th:each="review : ${myReviews}" class="p-4 review-card-item">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div class="star-rating">
+                                    <span th:each="i : ${#numbers.sequence(1, review.rating)}">⭐</span>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <a th:href="@{/editReview(id=${review.reviewId})}" class="btn-edit-sm">
+                                        <i class="bi bi-pencil me-1"></i> Edit
+                                    </a>
+                                    <form th:action="@{/deleteReview}" method="post" class="d-inline">
+                                        <input type="hidden" name="reviewId" th:value="${review.reviewId}">
+                                        <button type="submit" class="btn-edit-sm" onclick="return confirm('Delete this review permanently?');">
+                                            <i class="bi bi-trash3 me-1"></i> Delete
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                            <div class="small fw-bold text-uppercase mb-1" style="font-size: 0.65rem; color: #ad8b97;" th:text="${review.serviceName}">Service Name</div>
+                            <p class="small text-muted fst-italic mb-0" th:text="${'&quot;' + review.comment + '&quot;'}">"Review comment..."</p>
+                        </div>
+
+                        <div th:if="${#lists.isEmpty(myReviews)}" class="p-5 text-center text-muted">
+                            <i class="bi bi-chat-dots fs-1 opacity-25"></i>
+                            <p class="small mt-2">You haven't shared your thoughts yet!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex flex-column flex-md-row justify-content-center gap-3">
+            <a th:href="@{/public-review}" class="btn btn-lumiere-outline">
+                <i class="bi bi-star me-2"></i>New Feedback
+            </a>
+            <a th:href="@{/appointments(action='public-book')}" class="btn btn-lumiere shadow-sm">
+                <i class="bi bi-plus-circle me-2"></i>Book New Session
+            </a>
+        </div>
+    </div>
+
+    <div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePasswordModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content panel">
+                <div class="modal-header border-0 pb-0 mt-3 mx-3">
+                    <h5 class="modal-title h5 fw-bold" id="changePasswordModalLabel" style="color: var(--lumiere-dark); font-family: 'Playfair Display', serif;"><i class="bi bi-lock me-2 text-pink" style="color: var(--lumiere-pink);"></i>Update Password</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form th:action="@{/customers}" method="post" class="needs-validation" novalidate>
+                    <div class="modal-body mx-3">
+                        <input type="hidden" name="action" value="change-password">
+                        <p class="text-muted small mb-4">Please enter a new secure password for your account.</p>
+                        
+                        <div class="mb-3">
+                            <label for="newPassword" class="form-label fw-bold" style="font-size: 0.85rem; color: #7a5c68;">New Password</label>
+                            <div class="input-group shadow-sm" style="border-radius: 10px;">
+                                <span class="input-group-text bg-light border-end-0 text-muted" style="border-radius: 10px 0 0 10px;"><i class="bi bi-key"></i></span>
+                                <input type="password" class="form-control border-start-0" id="newPassword" name="newPassword" required pattern="^(?=.*[0-9]).{8,}$" placeholder="Min 8 chars, at least 1 number" style="border-radius: 0 10px 10px 0;">
+                                <div class="invalid-feedback">Password must be at least 8 characters long and contain at least one number.</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 pt-0 mb-3 mx-3">
+                        <button type="button" class="btn btn-lumiere-outline w-100 mb-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-lumiere shadow-sm w-100 m-0">Save New Password</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        (function () {
+            'use strict';
+            var forms = document.querySelectorAll('.needs-validation');
+            Array.prototype.slice.call(forms).forEach(function (form) {
+                form.addEventListener('submit', function (e) {
+                    if (!form.checkValidity()) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        })();
+    </script>
+</body>
+</html>
