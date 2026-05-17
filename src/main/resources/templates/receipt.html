@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Service Receipt | Lumière Salon</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <link rel="stylesheet" th:href="@{/lumiere-theme.css(v='2.0')}">
+    
+    <style>
+        .receipt-container { max-width: 650px; margin: 0 auto; }
+
+        .receipt-panel {
+            border: none; border-radius: 2rem; background-color: #fffdfd;
+            box-shadow: 0 1rem 3rem rgba(173, 127, 141, 0.1); overflow: hidden;
+            border: 1px solid rgba(231, 199, 210, 0.3); padding: 3rem;
+        }
+
+        .salon-logo-header { font-family: 'Playfair Display', serif; color: var(--lumiere-dark); text-align: center; }
+
+        .logo-circle-lg {
+            width: 60px; height: 60px; background: linear-gradient(135deg, #e4b7c2 0%, #d9a5b3 100%);
+            color: white; display: flex; align-items: center; justify-content: center;
+            border-radius: 15px; font-family: 'Playfair Display', serif; font-weight: bold;
+            font-size: 2rem; margin: 0 auto 15px auto; box-shadow: 0 8px 15px rgba(217, 165, 179, 0.3);
+        }
+
+        .divider { border-bottom: 2px dashed rgba(217, 165, 179, 0.3); margin: 2rem 0; }
+
+        .label-sm {
+            font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1.5px;
+            color: #ad8b97; font-weight: 700; display: block; margin-bottom: 3px;
+        }
+
+        .val-text { color: var(--lumiere-dark); font-weight: 600; }
+        .item-row { display: flex; justify-content: space-between; margin-bottom: 1rem; font-size: 1.05rem; }
+
+        .discount-highlight {
+            color: var(--lumiere-pink); font-weight: 600; background: var(--lumiere-soft);
+            padding: 0.5rem 1rem; border-radius: 10px; margin: 1rem 0;
+        }
+
+        .total-section {
+            background-color: #fcf6f8; margin: 2rem -3rem -3rem -3rem;
+            padding: 2.5rem 3rem; border-top: 1px solid rgba(217, 165, 179, 0.2);
+        }
+
+        .final-total {
+            font-family: 'Playfair Display', serif; font-size: 1.8rem;
+            color: var(--lumiere-dark); font-weight: 700;
+        }
+
+        /* Print Override */
+        @media print {
+            .no-print, nav { display: none !important; }
+            body { background: white !important; padding-top: 0; }
+            .receipt-panel { box-shadow: none; border: 1px solid #eee; margin: 0; }
+            .total-section { background-color: transparent !important; }
+        }
+    </style>
+</head>
+<body class="py-5"> <div class="container receipt-container mb-5">
+    
+    <div class="receipt-panel">
+        <div class="salon-logo-header">
+            <div class="logo-circle-lg">L</div>
+            <h1 class="h3 tracking-wider mb-1">LUMIÈRE</h1>
+            <p class="small text-uppercase opacity-50 tracking-widest">Premium Beauty Portal</p>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="row g-4">
+            <div class="col-6">
+                <span class="label-sm">Client Name</span>
+                <span class="val-text" th:text="${appointment.customerName}">Sarah Jenkins</span>
+            </div>
+            <div class="col-6 text-end">
+                <span class="label-sm">Invoice Number</span>
+                <span class="val-text" th:text="'#LUM-' + ${appointment.appointmentId}">#LUM-104</span>
+            </div>
+            <div class="col-6">
+                <span class="label-sm">Service Date</span>
+                <span class="val-text" th:text="${appointment.appointmentDate}">2026-04-24</span>
+            </div>
+            <div class="col-6 text-end">
+                <span class="label-sm">Artistry By</span>
+                <span class="val-text" th:text="${appointment.stylistName}">Kasun</span>
+            </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="item-row">
+            <span class="fw-bold" th:text="${appointment.serviceName}">Bespoke Hair Styling</span>
+            <span class="val-text" th:text="'Rs. ' + ${#numbers.formatDecimal(basePrice, 1, 2)}">Rs. 150.00</span>
+        </div>
+
+        <div th:if="${isFirstTime}" class="discount-highlight">
+            <div class="d-flex justify-content-between">
+                <span><i class="bi bi-stars me-2"></i>First-Timer Sparkle Discount (10%)</span>
+                <span th:text="'- Rs. ' + ${#numbers.formatDecimal(discountAmount, 1, 2)}">- Rs. 15.00</span>
+            </div>
+        </div>
+
+        <div class="item-row small opacity-75">
+            <span>Service Tax (5%)</span>
+            <span th:text="'+ Rs. ' + ${#numbers.formatDecimal(taxAmount, 1, 2)}">+ Rs. 7.50</span>
+        </div>
+
+        <div class="total-section">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="label-sm mb-0">Total Amount Payable</span>
+                    <div class="small text-muted">All taxes included</div>
+                </div>
+                <div class="final-total" th:text="'Rs. ' + ${#numbers.formatDecimal(finalTotal, 1, 2)}">Rs. 142.50</div>
+            </div>
+        </div>
+
+        <div class="mt-5 text-center no-print">
+            <button onclick="window.print()" class="btn btn-dark rounded-pill px-4 me-2">
+                <i class="bi bi-printer me-2"></i> Print Invoice
+            </button>
+            <a href="/my-portal" class="btn btn-lumiere px-4">
+                Return to Portal
+            </a>
+        </div>
+        
+        <p class="text-center text-muted small mt-4 opacity-50">Lumière Salon & Spa | Excellence in Every Detail</p>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

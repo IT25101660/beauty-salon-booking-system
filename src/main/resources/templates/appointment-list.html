@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Appointments | Lumière Salon</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <link rel="stylesheet" th:href="@{/lumiere-theme.css(v='1.5')}">
+</head>
+
+<body class="py-5">
+<div class="container">
+    <div class="row align-items-center mb-5">
+        <div class="col-lg-6 mb-3 mb-lg-0">
+            <div class="d-flex align-items-center">
+                <div class="logo-circle me-3">L</div>
+                <div>
+                    <h1 class="h2 mb-0">Appointments</h1>
+                    <p class="text-secondary mb-0">Manage upcoming client sessions with precision.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6 text-lg-end">
+            <div class="d-flex flex-wrap gap-2 justify-content-lg-end">
+                <a th:href="@{/admin}" class="btn btn-lumiere-outline">
+                    <i class="bi bi-arrow-left me-2"></i>Dashboard
+                </a>
+                <a th:if="${session.staffRole == 'MANAGER'}"
+                   th:href="@{/appointments(action='new')}" class="btn btn-lumiere">
+                    <i class="bi bi-calendar-plus me-2"></i>Book New Appointment
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="card panel">
+        <div class="panel-header d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <h2 class="h5 mb-0"><i class="bi bi-calendar3 me-2"></i>Appointment Schedule</h2>
+            <div class="search-container">
+                <div class="input-group" style="min-width: 320px;">
+                    <span class="input-group-text bg-transparent border-0 pe-0">
+                        <i class="bi bi-search text-muted"></i>
+                    </span>
+                    <input type="text" id="apptSearch" class="form-control border-0" placeholder="Search by name, service, or status...">
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" id="apptTable">
+                    <thead>
+                    <tr>
+                        <th scope="col" class="ps-4">ID</th>
+                        <th scope="col">Customer</th>
+                        <th scope="col">Service</th>
+                        <th scope="col">Stylist</th> 
+                        <th scope="col">Date</th>
+                        <th scope="col">Time</th>
+                        <th scope="col">Status</th>
+                        <th scope="col" class="text-end pe-4">Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:if="${appointments != null and !appointments.isEmpty()}" th:each="appt : ${appointments}">
+                        <td class="ps-4 text-muted small" th:text="${appt.appointmentId}"></td>
+                        <td><div class="fw-bold" th:text="${appt.customerName}"></div></td>
+                        <td th:text="${appt.serviceName}"></td>
+                        <td class="stylist-text">
+                            <i class="bi bi-person-badge me-1 small"></i>
+                            <span th:text="${appt.stylistName}"></span>
+                        </td>
+                        <td><i class="bi bi-calendar3 text-muted me-1"></i><span th:text="${appt.appointmentDate}"></span></td>
+                        <td><i class="bi bi-clock text-muted me-1"></i><span th:text="${appt.formattedAppointmentTime}"></span></td>
+                        <td><span th:utext="${appt.getDisplayStatus()}"></span></td>
+                        <td class="text-end pe-4">
+                            <div th:if="${session.staffRole == 'MANAGER'}" class="btn-group">
+                                <a th:href="@{/appointments(action='edit', appointmentId=${appt.appointmentId})}" class="btn btn-sm btn-outline-secondary border-0 rounded-circle me-1" title="Edit/Reschedule">
+                                    <i class="bi bi-pencil-square fs-5"></i>
+                                </a>
+                                <a th:href="@{/appointments(action='delete', appointmentId=${appt.appointmentId})}" class="btn btn-sm btn-outline-danger border-0 rounded-circle" title="Cancel Appointment" onclick="return confirm('Permanently delete this appointment?');">
+                                    <i class="bi bi-calendar-x fs-5"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr th:if="${appointments == null or appointments.isEmpty()}">
+                        <td colspan="8" class="text-center py-5">
+                            <i class="bi bi-calendar-x display-4 text-muted mb-3 d-block opacity-25"></i>
+                            <p class="text-secondary fs-5 mb-0">No appointments scheduled at the moment.</p>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.getElementById('apptSearch').addEventListener('keyup', function() {
+        let filter = this.value.toLowerCase();
+        let rows = document.querySelectorAll("#apptTable tbody tr");
+        rows.forEach(row => {
+            let rowContent = row.textContent.toLowerCase();
+            row.style.display = rowContent.includes(filter) ? "" : "none";
+        });
+    });
+</script>
+</body>
+</html>

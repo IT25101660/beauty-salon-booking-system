@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stylist Workspace | Lumière Salon</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <link rel="stylesheet" th:href="@{/lumiere-theme.css(v='2.0')}">
+
+    <style>
+        :root {
+            --lumiere-card-shadow: 0 1rem 3rem rgba(173, 127, 141, 0.08);
+        }
+
+        .stylist-portal .navbar {
+            background: rgba(255, 255, 255, 0.9) !important;
+            border-bottom: 1px solid rgba(217, 165, 179, 0.2);
+            box-shadow: none;
+        }
+
+        .logo-circle-sm {
+            width: 35px; height: 35px;
+            background: linear-gradient(135deg, #e4b7c2 0%, #d9a5b3 100%);
+            color: white; display: inline-flex; align-items: center;
+            justify-content: center; border-radius: 8px; font-weight: bold; margin-right: 12px;
+        }
+
+        .portal-header { padding: 4rem 0 2rem 0; }
+
+        .stats-card {
+            background: white; border: 1px solid rgba(217, 165, 179, 0.2);
+            border-radius: 1.5rem; padding: 1.5rem; box-shadow: var(--lumiere-card-shadow);
+            transition: transform 0.3s ease;
+        }
+        .stats-card:hover { transform: translateY(-5px); }
+
+        .workspace-card {
+            background: white; border: none; border-radius: 2rem;
+            box-shadow: var(--lumiere-card-shadow); overflow: hidden;
+            border: 1px solid rgba(231, 199, 210, 0.3);
+        }
+
+        .workspace-card .table thead th {
+            background-color: #fcf6f8; color: #8a6a78; font-weight: 700;
+            text-transform: uppercase; font-size: 0.7rem; letter-spacing: 1.5px;
+            padding: 1.2rem 1rem; border: none;
+        }
+
+        .workspace-card .table tbody td {
+            padding: 1.5rem 1rem; vertical-align: middle; border-color: #fdf1f4;
+        }
+
+        .status-rescheduled { background-color: #e3f2fd; color: #1565c0; }
+        .status-checked-in { background-color: #f3e5f5; color: #6a1b9a; } 
+        .status-completed { background-color: #eceff1; color: #546e7a; } 
+        .status-cancelled { background-color: #ffebee; color: #c62828; text-decoration: line-through; }
+
+        .btn-lumiere-sm {
+            background-color: var(--lumiere-pink); color: white; border-radius: 50px;
+            font-size: 0.8rem; font-weight: 600; padding: 0.5rem 1.2rem; border: none; transition: all 0.3s ease;
+        }
+        .btn-lumiere-sm:hover { background-color: #c48c9a; box-shadow: 0 5px 15px rgba(217, 165, 179, 0.3); color: white; }
+
+        .btn-dash {
+            border: 1px solid var(--lumiere-pink); color: var(--lumiere-pink);
+            border-radius: 50px; font-weight: 600; transition: all 0.3s ease; background: transparent;
+        }
+        .btn-dash:hover { background-color: var(--lumiere-pink); color: white; }
+    </style>
+</head>
+<body class="stylist-portal"> <nav class="navbar sticky-top shadow-sm">
+        <div class="container d-flex justify-content-between align-items-center">
+            <a class="navbar-brand d-flex align-items-center" href="/">
+                <div class="logo-circle-sm">L</div>
+                <span class="fs-4 tracking-wider">LUMIÈRE</span>
+            </a>
+            
+            <div class="d-flex align-items-center gap-2 gap-md-3">
+                <a href="/admin" class="btn btn-dash btn-sm px-3 px-md-4 py-2">
+                    <i class="bi bi-grid-1x2-fill me-2"></i><span class="d-none d-md-inline">Admin Dashboard</span>
+                </a>
+                
+                <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3 fw-bold" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
+                    <i class="bi bi-key"></i> <span class="d-none d-sm-inline">Password</span>
+                </button>
+                
+                <a href="/staff-logout" class="btn btn-outline-danger btn-sm rounded-pill px-3 fw-bold">Sign Out</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        
+        <div th:if="${param.passwordStatus != null and param.passwordStatus[0] == 'updated'}" class="alert alert-success alert-dismissible fade show rounded-4 shadow-sm border-0 mt-4 mb-0" role="alert">
+            <i class="bi bi-shield-lock-fill me-2"></i> <strong>Secured!</strong> Your staff password has been successfully updated.
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <header class="portal-header row align-items-center">
+            <div class="col-lg-8 text-center text-lg-start">
+                <h1 class="display-5 fw-bold mb-2">Workspace: <span th:text="${stylistName}">Stylist Name</span></h1>
+                <p class="text-muted lead">Manage your artistry. Today is a perfect day to make someone glow.</p>
+            </div>
+            <div class="col-lg-4 mt-4 mt-lg-0">
+                <div class="stats-card d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="small fw-bold text-uppercase opacity-50" style="letter-spacing: 1px;">Scheduled Sessions</div>
+                        <div class="h2 mb-0 fw-bold" style="color: var(--lumiere-pink);" th:text="${#lists.size(mySchedule)}">0</div>
+                    </div>
+                    <div class="p-3 rounded-circle" style="background: var(--lumiere-bg); color: var(--lumiere-pink);">
+                        <i class="bi bi-calendar-check fs-3"></i>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="card workspace-card mt-4 mb-5">
+            <div class="p-4 bg-white border-bottom d-flex justify-content-between align-items-center">
+                <h3 class="h5 mb-0 fw-bold"><i class="bi bi-clock-history me-2 text-pink" style="color: var(--lumiere-pink);"></i>Your Daily Agenda</h3>
+                <span class="text-muted small" th:text="${#calendars.format(#calendars.createNow(), 'EEEE, MMMM dd, yyyy')}">Date</span>
+            </div>
+            
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th class="ps-4">Time</th>
+                                <th>Client Name</th>
+                                <th>Requested Service</th>
+                                <th>Status</th>
+                                <th class="text-end pe-4">Operations</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="appt : ${mySchedule}">
+                                <td class="ps-4 fw-bold text-dark">
+                                    <i class="bi bi-clock me-2 text-muted"></i>
+                                    <span th:text="${appt.formattedAppointmentTime}">10:00 AM</span>
+                                </td>
+                                <td>
+                                    <div class="fw-bold" th:text="${appt.customerName}">Customer</div>
+                                    <div class="small text-muted" th:text="${appt.appointmentDate}">Date</div>
+                                </td>
+                                <td>
+                                    <span class="p-2 px-3 rounded-4 small fw-medium" style="background: #fdf7f8; color: #a66f82;" th:text="${appt.serviceName}">
+                                        Service Name
+                                    </span>
+                                </td>
+                                <td>
+                                    <span th:classappend="${'status-' + #strings.replace(#strings.toLowerCase(appt.status), ' ', '-')}" 
+                                          class="badge-status" th:text="${appt.status}">
+                                        Pending
+                                    </span>
+                                </td>
+                                <td class="text-end pe-4">
+                                    
+                                    <form th:if="${appt.status == 'Confirmed'}" th:action="@{/appointments}" method="post" class="d-inline">
+                                        <input type="hidden" name="action" value="stylist-checkin">
+                                        <input type="hidden" name="appointmentId" th:value="${appt.appointmentId}">
+                                        <button type="submit" class="btn btn-lumiere-sm">Check-In</button>
+                                    </form>
+
+                                    <form th:if="${appt.status == 'Checked In'}" th:action="@{/appointments}" method="post" class="d-inline">
+                                        <input type="hidden" name="action" value="stylist-complete">
+                                        <input type="hidden" name="appointmentId" th:value="${appt.appointmentId}">
+                                        <button type="submit" class="btn btn-sm btn-success rounded-pill fw-bold px-3 shadow-sm">Complete</button>
+                                    </form>
+
+                                    <span th:if="${appt.status == 'Completed'}" class="text-success small fw-bold">
+                                        <i class="bi bi-check2-all fs-4"></i>
+                                    </span>
+
+                                    <span th:if="${appt.status == 'Cancelled'}" class="text-muted small fw-bold">
+                                        -
+                                    </span>
+
+                                </td>
+                            </tr>
+
+                            <tr th:if="${#lists.isEmpty(mySchedule)}">
+                                <td colspan="5" class="text-center py-5">
+                                    <div class="py-4">
+                                        <i class="bi bi-cup-hot display-1 opacity-10 d-block mb-3"></i>
+                                        <h4 class="text-muted">No appointments found for you today.</h4>
+                                        <p class="small text-secondary">A perfect time to restock your station or check the main directory.</p>
+                                        <a href="/admin" class="btn btn-dash btn-sm px-4 mt-3">View Full Directory</a>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div class="text-center pb-5">
+            <p class="text-muted small">Lumière Staff Portal &copy; 2026 | Maintaining Excellence in Beauty</p>
+        </div>
+
+    </div>
+
+    <div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePasswordModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content panel">
+                <div class="modal-header border-0 pb-0 mt-3 mx-3">
+                    <h5 class="modal-title h5 fw-bold" id="changePasswordModalLabel" style="color: var(--lumiere-dark); font-family: 'Playfair Display', serif;"><i class="bi bi-lock me-2 text-pink" style="color: var(--lumiere-pink);"></i>Update Password</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form th:action="@{/stylists}" method="post" class="needs-validation" novalidate>
+                    <div class="modal-body mx-3">
+                        <input type="hidden" name="action" value="change-password">
+                        <p class="text-muted small mb-4">Please set a secure, unique password for your staff account.</p>
+                        
+                        <div class="mb-3">
+                            <label for="newPassword" class="form-label fw-bold" style="font-size: 0.85rem; color: #7a5c68;">New Password</label>
+                            <div class="input-group shadow-sm" style="border-radius: 10px;">
+                                <span class="input-group-text bg-light border-end-0 text-muted" style="border-radius: 10px 0 0 10px;"><i class="bi bi-key"></i></span>
+                                <input type="password" class="form-control border-start-0" id="newPassword" name="newPassword" required pattern="^(?=.*[0-9]).{8,}$" placeholder="Min 8 chars, at least 1 number" style="border-radius: 0 10px 10px 0;">
+                                <div class="invalid-feedback">Password must be at least 8 characters long and contain at least one number.</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 pt-0 mb-3 mx-3">
+                        <button type="button" class="btn btn-lumiere-outline w-100 mb-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-lumiere shadow-sm w-100 m-0">Save New Password</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        (function () {
+            'use strict';
+            var forms = document.querySelectorAll('.needs-validation');
+            Array.prototype.slice.call(forms).forEach(function (form) {
+                form.addEventListener('submit', function (e) {
+                    if (!form.checkValidity()) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        })();
+    </script>
+</body>
+</html>
