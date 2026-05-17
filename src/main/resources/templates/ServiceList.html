@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Salon Services | Lumière Salon</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <link rel="stylesheet" th:href="@{/lumiere-theme.css(v='2.0')}">
+
+    <style>
+        .price-cell {
+            font-weight: 700;
+            color: #4a3a42;
+        }
+        .badge-package {
+            background-color: #fce4ec;
+            color: #c2185b;
+            border: 1px solid #f8bbd0;
+        }
+        .badge-standard {
+            background-color: #f1f3f4;
+            color: #5f6368;
+            border: 1px solid #dadce0;
+        }
+    </style>
+</head>
+<body class="admin-body py-5"> <div class="container">
+
+    <div class="row align-items-center mb-5">
+        <div class="col-lg-6 mb-3 mb-lg-0">
+            <div class="d-flex align-items-center">
+                <div class="logo-circle me-3">L</div>
+                <div>
+                    <h1 class="h2 mb-0">Salon Services</h1>
+                    <p class="text-secondary mb-0">Manage and oversee all Lumière beauty offerings.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6 text-lg-end">
+            <div class="d-flex flex-wrap gap-2 justify-content-lg-end">
+                <a th:href="@{/admin}" class="btn btn-lumiere-outline">
+                    <i class="bi bi-arrow-left me-2"></i>Dashboard
+                </a>
+                <a th:if="${session.staffRole == 'MANAGER'}"
+                   th:href="@{/services(action='new')}" class="btn btn-lumiere">
+                    <i class="bi bi-plus-lg me-2"></i>Add New Service
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="card panel">
+        <div class="panel-header d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <h2 class="h5 mb-0"><i class="bi bi-scissors me-2"></i>Active Treatments</h2>
+
+            <div class="search-container">
+                <div class="input-group">
+                    <span class="input-group-text bg-transparent border-0 pe-0">
+                        <i class="bi bi-search text-muted"></i>
+                    </span>
+                    <input type="text" id="serviceSearch" class="form-control border-0" placeholder="Search services...">
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" id="serviceTable">
+                    <thead>
+                    <tr>
+                        <th class="ps-4">ID</th>
+                        <th>Type</th>
+                        <th>Service Name</th>
+                        <th>Description</th>
+                        <th class="text-end">Base Price</th>
+                        <th class="text-end pe-4">Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:if="${#lists.isEmpty(services)}">
+                        <td colspan="6" class="text-center py-5 text-secondary">
+                            <i class="bi bi-info-circle display-4 d-block mb-3 opacity-25"></i>
+                            <span>No services found. Add your first service to get started.</span>
+                        </td>
+                    </tr>
+                    <tr th:each="service : ${services}">
+                        <td class="ps-4 text-muted small" th:text="${service.serviceId}"></td>
+                        <td>
+                                <span class="badge rounded-pill"
+                                      th:classappend="${service instanceof T(com.example.beautysalonreview.model.PackageService) ? 'badge-package' : 'badge-standard'}"
+                                      th:text="${service instanceof T(com.example.beautysalonreview.model.PackageService) ? 'Package' : 'Standard'}">
+                                </span>
+                        </td>
+                        <td class="fw-bold" th:text="${service.name}"></td>
+                        <td class="text-muted small" style="max-width: 300px;">
+                            <span class="d-inline-block text-truncate w-100" th:title="${service.description}" th:text="${service.description}"></span>
+                        </td>
+                        <td class="text-end price-cell" th:text="'LKR ' + ${#numbers.formatDecimal(service.basePrice, 1, 2)}"></td>
+                        <td class="text-end pe-4">
+                            <div th:if="${session.staffRole == 'MANAGER'}" class="btn-group">
+                                <a th:href="@{/services(action='edit',serviceId=${service.serviceId})}"
+                                   class="btn btn-sm btn-outline-secondary border-0 rounded-circle me-1" title="Edit Service">
+                                    <i class="bi bi-pencil-square fs-5"></i>
+                                </a>
+                                <a th:href="@{/services(action='delete',serviceId=${service.serviceId})}"
+                                   class="btn btn-sm btn-outline-danger border-0 rounded-circle"
+                                   title="Delete Service"
+                                   onclick="return confirm('Delete this service?');">
+                                    <i class="bi bi-trash3 fs-5"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    document.getElementById('serviceSearch').addEventListener('keyup', function() {
+        let filter = this.value.toLowerCase();
+        let rows = document.querySelectorAll("#serviceTable tbody tr");
+
+        rows.forEach(row => {
+            let text = row.innerText.toLowerCase();
+            row.style.display = text.includes(filter) ? "" : "none";
+        });
+    });
+</script>
+
+</body>
+</html>
