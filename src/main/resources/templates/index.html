@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lumière Salon | Premium Beauty & Wellness</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" th:href="@{/lumiere-theme.css(v='2.0')}">
+
+    <style>
+        /* ── Page-specific overrides only (theme lives in lumiere-theme.css) ── */
+
+        /* ═══════════════════════════════════════════════════
+           [NEW #1] LUXURY PRELOADER
+           Full-screen branded overlay that fades out on load.
+        ═══════════════════════════════════════════════════ */
+        #preloader {
+            position: fixed; inset: 0; z-index: 9999;
+            background: var(--lumiere-dark);
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center; gap: 1.6rem;
+            transition: opacity .6s ease, visibility .6s ease;
+        }
+        #preloader.hidden { opacity: 0; visibility: hidden; }
+
+        .preloader-emblem {
+            width: 72px; height: 72px;
+            border-radius: 18px;
+            background: linear-gradient(135deg, #e4b7c2, #d9a5b3);
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'Playfair Display', serif;
+            font-size: 2.2rem; font-weight: 700; color: white;
+            box-shadow: 0 0 0 0 rgba(217,165,179,.6);
+            animation: preloaderPulse 1.6s ease-in-out infinite;
+        }
+        @keyframes preloaderPulse {
+            0%   { box-shadow: 0 0 0 0   rgba(217,165,179,.5); transform: scale(1); }
+            50%  { box-shadow: 0 0 0 18px rgba(217,165,179,0); transform: scale(1.04); }
+            100% { box-shadow: 0 0 0 0   rgba(217,165,179,0); transform: scale(1); }
+        }
+        .preloader-dots { display: flex; gap: 7px; }
+        .preloader-dots span {
+            width: 6px; height: 6px; border-radius: 50%;
+            background: rgba(217,165,179,.5);
+            animation: dotBounce .9s ease-in-out infinite;
+        }
+        .preloader-dots span:nth-child(2) { animation-delay: .15s; }
+        .preloader-dots span:nth-child(3) { animation-delay: .30s; }
+        @keyframes dotBounce {
+            0%,100% { transform: translateY(0); background: rgba(217,165,179,.4); }
+            50%      { transform: translateY(-7px); background: #d9a5b3; }
+        }
+
+        /* ═══════════════════════════════════════════════════
+           EXISTING: Navbar shrinks on scroll
+        ═══════════════════════════════════════════════════ */
+        .navbar { transition: padding 0.4s ease, box-shadow 0.4s ease; }
+        .navbar.nav-scrolled { padding: 0.45rem 0 !important; box-shadow: 0 6px 28px rgba(61,43,52,.18) !important; }
+
+        /* ═══════════════════════════════════════════════════
+           [NEW #2] ACTIVE NAV LINK ON SCROLL
+           A soft underline appears on whichever nav section is in view.
+        ═══════════════════════════════════════════════════ */
+        .nav-link { position: relative; transition: opacity .25s ease; }
+        .nav-link::after {
+            content: ''; position: absolute;
+            bottom: -3px; left: 50%; width: 0; height: 2px;
+            background: white; border-radius: 2px;
+            transition: all .35s cubic-bezier(.16,1,.3,1);
+        }
+        .nav-link:hover::after,
+        .nav-link.nav-active::after { width: 70%; left: 15%; }
+        .nav-link.nav-active { opacity: 1; font-weight: 600 !important; }
+
+        /* ── Hero ─────────────────────────────────────────── */
+        .hero-section {
+            background: linear-gradient(rgba(61,43,52,.48), rgba(61,43,52,.48)),
+                        url('https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&q=80&w=2000')
+                        no-repeat center center / cover;
+            height: 100vh;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .hero-animate { opacity: 0; transform: translateY(22px); animation: heroUp 0.9s cubic-bezier(.16,1,.3,1) forwards; }
+        .hero-animate:nth-child(1) { animation-delay: .15s; }
+        .hero-animate:nth-child(2) { animation-delay: .35s; }
+        .hero-animate:nth-child(3) { animation-delay: .55s; }
+        .hero-animate:nth-child(4) { animation-delay: .75s; }
+        @keyframes heroUp { to { opacity:1; transform:none; } }
+        .scroll-caret { animation: caretBounce 2.2s ease-in-out infinite; }
+        @keyframes caretBounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(8px)} }
+
+        /* ── Marquee ──────────────────────────────────────── */
+        .marquee-strip { background: var(--lumiere-pink); overflow: hidden; padding: .75rem 0; }
+        .marquee-track { display: inline-flex; white-space: nowrap; animation: marquee 30s linear infinite; }
+        .marquee-track span {
+            color: rgba(255,255,255,.9); font-size: .68rem; font-weight: 700;
+            letter-spacing: 3px; text-transform: uppercase; padding: 0 2rem;
+        }
+        .marquee-track .pip {
+            display: inline-block; width: 4px; height: 4px; border-radius: 50%;
+            background: rgba(255,255,255,.4); vertical-align: middle;
+        }
+        @keyframes marquee { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+
+        /* ── Stats bar ────────────────────────────────────── */
+        .stats-bar { background: var(--lumiere-dark); }
+        .stat-num {
+            font-family: 'Playfair Display', serif; font-size: clamp(2.2rem,4vw,3rem);
+            font-weight: 700; color: var(--lumiere-pink); line-height: 1;
+        }
+        .stat-lbl { font-size: .68rem; letter-spacing: 2.5px; text-transform: uppercase; color: rgba(255,255,255,.45); margin-top: .35rem; }
+        .stat-sep { width: 1px; height: 50px; background: rgba(217,165,179,.2); }
+
+        /* ═══════════════════════════════════════════════════
+           [NEW #3] "WHY LUMIÈRE" FEATURE PILLARS
+           Three trust signals between stats and services.
+        ═══════════════════════════════════════════════════ */
+        .pillars-section { background: var(--lumiere-bg); padding: 5rem 0 2rem; }
+
+        .pillar-card {
+            background: white;
+            border-radius: 1.4rem;
+            border: 1px solid rgba(231,199,210,.45);
+            padding: 2.2rem 2rem;
+            text-align: center;
+            transition: all .4s cubic-bezier(.16,1,.3,1);
+        }
+        .pillar-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(173,127,141,.13);
+            border-color: var(--lumiere-pink);
+        }
+        .pillar-icon {
+            width: 58px; height: 58px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #fdf1f4, #fce8ee);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.6rem; color: var(--lumiere-pink);
+            margin: 0 auto 1.3rem;
+            transition: all .4s ease;
+        }
+        .pillar-card:hover .pillar-icon {
+            background: linear-gradient(135deg, #d9a5b3, #c48c9a);
+            color: white;
+            transform: scale(1.08) rotate(-4deg);
+        }
+        .pillar-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.05rem; font-weight: 700;
+            color: var(--lumiere-dark); margin-bottom: .5rem;
+        }
+        .pillar-text { font-size: .84rem; color: #9a7a86; line-height: 1.6; margin: 0; }
+
+        /* ── Scroll-reveal ────────────────────────────────── */
+        .sr { opacity: 0; transform: translateY(28px); transition: opacity .7s cubic-bezier(.16,1,.3,1), transform .7s cubic-bezier(.16,1,.3,1); }
+        .sr.in { opacity: 1; transform: none; }
+        .sr-d1 { transition-delay: .1s; } .sr-d2 { transition-delay: .2s; }
+        .sr-d3 { transition-delay: .3s; } .sr-d4 { transition-delay: .4s; }
+
+        /* ═══════════════════════════════════════════════════
+           [NEW #4] SERVICE CARD IMAGE HOVER OVERLAY
+           "Book This →" text fades onto the image on hover.
+        ═══════════════════════════════════════════════════ */
+        .svc-img { overflow: hidden; height: 270px; position: relative; }
+        .svc-img img { width: 100%; height: 100%; object-fit: cover; transition: transform .85s cubic-bezier(.16,1,.3,1); }
+        .service-card:hover .svc-img img { transform: scale(1.09); }
+
+        .svc-overlay {
+            position: absolute; inset: 0;
+            background: linear-gradient(to top, rgba(61,43,52,.72) 0%, rgba(61,43,52,.1) 55%);
+            display: flex; align-items: flex-end; padding: 1.2rem 1.4rem;
+            opacity: 0; transform: translateY(6px);
+            transition: opacity .4s ease, transform .4s ease;
+        }
+        .service-card:hover .svc-overlay { opacity: 1; transform: none; }
+        .svc-overlay-text {
+            color: white; font-size: .78rem; font-weight: 700;
+            letter-spacing: 1.5px; text-transform: uppercase;
+            display: flex; align-items: center; gap: 7px;
+        }
+        .svc-overlay-text i { font-size: 1rem; transition: transform .3s ease; }
+        .service-card:hover .svc-overlay-text i { transform: translateX(4px); }
+
+        /* ── Service card arrow ───────────────────────────── */
+        .svc-arrow {
+            width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+            background: #fdf1f4; color: var(--lumiere-pink);
+            display: flex; align-items: center; justify-content: center;
+            transition: all .35s cubic-bezier(.175,.885,.32,1.275);
+        }
+        .service-card:hover .svc-arrow { background: var(--lumiere-pink); color: #fff; transform: rotate(-45deg) scale(1.08); }
+
+        /* ── Section eyebrow ──────────────────────────────── */
+        .eyebrow { color: var(--lumiere-pink); font-size: .72rem; font-weight: 700; letter-spacing: 3.5px; text-transform: uppercase; }
+
+        /* ── Stylists ─────────────────────────────────────── */
+        .stylist-avatar {
+            width: 170px; height: 170px; object-fit: cover; border-radius: 50%;
+            border: 5px solid #fff; box-shadow: 0 8px 28px rgba(173,127,141,.15);
+            transition: all .55s cubic-bezier(.4,0,.2,1);
+        }
+        .stylist-item:hover .stylist-avatar { border-color: var(--lumiere-soft); transform: rotate(8deg) scale(1.06); box-shadow: 0 16px 40px rgba(173,127,141,.25); }
+        .stylist-chip { display: inline-block; background: var(--lumiere-soft); color: #c48c9a; font-size: .6rem; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; padding: 3px 10px; border-radius: 20px; }
+
+        /* ── Reviews ──────────────────────────────────────── */
+        .review-quote-icon { font-size: 3.5rem; color: #f2d7df; opacity: .8; }
+        .carousel-inner {
+            background: #fff; border-radius: 2rem; padding: 3.5rem 4rem;
+            border: 1px solid rgba(231,199,210,.3); box-shadow: 0 8px 36px rgba(173,127,141,.09);
+        }
+        .carousel-dot-track { display: flex; justify-content: center; gap: .5rem; margin-top: 1.2rem; }
+        .cdot { width: 8px; height: 8px; border-radius: 50%; border: none; cursor: pointer; background: rgba(217,165,179,.35); transition: all .3s; padding: 0; }
+        .cdot.active { background: var(--lumiere-pink); transform: scale(1.35); }
+
+        /* ── Footer logo ──────────────────────────────────── */
+        .footer-logo { font-family: 'Playfair Display', serif; font-size: 1.4rem; letter-spacing: 1px; color: var(--lumiere-dark); display: flex; align-items: center; }
+        .logo-circle-sm {
+            width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0;
+            background: linear-gradient(135deg,#e4b7c2,#d9a5b3);
+            color: #fff; display: inline-flex; align-items: center; justify-content: center;
+            font-family: 'Playfair Display', serif; font-weight: 700; font-size: 1rem;
+            margin-right: 10px; box-shadow: 0 4px 10px rgba(217,165,179,.3);
+        }
+
+        /* ── Floating CTA ─────────────────────────────────── */
+        #fabBtn {
+            position: fixed; bottom: 26px; right: 26px; z-index: 999;
+            background: var(--lumiere-dark); color: #fff; border: none; border-radius: 50px;
+            padding: .8rem 1.6rem; font-size: .76rem; font-weight: 700; letter-spacing: 1.5px;
+            text-transform: uppercase; text-decoration: none; display: flex; align-items: center; gap: 8px;
+            box-shadow: 0 8px 28px rgba(61,43,52,.35);
+            transform: translateY(80px); opacity: 0;
+            transition: transform .45s cubic-bezier(.16,1,.3,1), opacity .45s ease, background .3s, box-shadow .3s;
+        }
+        #fabBtn.show { transform: translateY(0); opacity: 1; }
+        #fabBtn:hover { background: var(--lumiere-pink); color: #fff; transform: translateY(-3px); box-shadow: 0 14px 34px rgba(217,165,179,.42); }
+        .fab-pulse { width: 7px; height: 7px; border-radius: 50%; background: var(--lumiere-pink); animation: fabPulse 2s ease-in-out infinite; }
+        #fabBtn:hover .fab-pulse { background: rgba(255,255,255,.7); }
+        @keyframes fabPulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.6);opacity:.5} }
+
+        /* ═══════════════════════════════════════════════════
+           [NEW #5] BACK-TO-TOP BUTTON
+           Small circle on the left that mirrors the FAB timing.
+           Separate from the FAB so booking stays prominent.
+        ═══════════════════════════════════════════════════ */
+        #backTop {
+            position: fixed; bottom: 26px; left: 26px; z-index: 998;
+            width: 44px; height: 44px; border-radius: 50%;
+            background: rgba(253,241,244,.92);
+            border: 1.5px solid rgba(217,165,179,.5);
+            color: var(--lumiere-pink);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem; text-decoration: none;
+            box-shadow: 0 4px 16px rgba(173,127,141,.16);
+            opacity: 0; transform: translateY(14px);
+            transition: opacity .4s ease, transform .4s ease, background .3s, color .3s;
+            backdrop-filter: blur(6px);
+        }
+        #backTop.show { opacity: 1; transform: none; }
+        #backTop:hover { background: var(--lumiere-pink); color: white; transform: translateY(-3px); box-shadow: 0 8px 22px rgba(217,165,179,.38); }
+
+        /* ── Wave dividers ────────────────────────────────── */
+        .wave { display: block; line-height: 0; }
+
+        @media (max-width: 767px) {
+            .carousel-inner { padding: 2rem 1.5rem; }
+            .stat-sep { display: none; }
+            .pillar-card { padding: 1.6rem 1.2rem; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════
+     [NEW #1] PRELOADER
+     Fades out the moment the page finishes loading.
+════════════════════════════════════════════════════════ -->
+<div id="preloader" role="status" aria-label="Loading Lumière Salon">
+    <div class="preloader-emblem">L</div>
+    <div class="preloader-dots">
+        <span></span><span></span><span></span>
+    </div>
+</div>
+
+<!-- ── Floating Book Button ─────────────────────────────── -->
+<a href="/customers?action=public-register" id="fabBtn" aria-label="Book appointment">
+    <span class="fab-pulse"></span>Book Now
+</a>
+
+<!-- ═══════════════════════════════════════════════════════
+     [NEW #5] BACK-TO-TOP BUTTON (bottom-left, never competes with FAB)
+════════════════════════════════════════════════════════ -->
+<a href="#" id="backTop" aria-label="Back to top" title="Back to top">
+    <i class="bi bi-chevron-up"></i>
+</a>
+
+<!-- ── Navbar ─────────────────────────────────────────────── -->
+<nav class="navbar navbar-expand-lg fixed-top shadow-sm" id="mainNav">
+    <div class="container">
+        <a class="navbar-brand fs-3 fw-bold text-white" href="/">LUMIÈRE</a>
+        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-list text-white fs-2"></i>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto mb-2 mb-lg-0 fw-medium align-items-center">
+                <!-- [NEW #2] data-section links the nav item to its section for active highlighting -->
+                <li class="nav-item"><a class="nav-link" href="#services"    data-section="services">Services</a></li>
+                <li class="nav-item"><a class="nav-link" href="#specialists" data-section="specialists">Our Team</a></li>
+                <li class="nav-item"><a class="nav-link" href="#reviews"     data-section="reviews">Reviews</a></li>
+                <li class="nav-item ms-lg-3">
+                    <a href="/customers?action=login" class="btn btn-light fw-bold shadow-sm px-4 py-2" style="color:#d8a4b1;border-radius:50px;font-size:.85rem;">
+                        <i class="bi bi-person-circle me-2"></i>Client Login
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- ── Hero ────────────────────────────────────────────────── -->
+<header class="hero-section text-center position-relative">
+    <div class="container position-relative" style="z-index:2;">
+        <div class="hero-content text-white">
+            <span class="hero-animate d-block mb-3 text-uppercase fw-bold" style="letter-spacing:6px;font-size:.78rem;opacity:.85;">Welcome to Lumière</span>
+            <h1 class="hero-animate display-1 fw-bold mb-4" style="line-height:1.05;">Elevate Your<br class="d-none d-md-block"> Elegance</h1>
+            <p class="hero-animate lead fw-light mb-5 mx-auto opacity-90" style="max-width:580px;font-size:1.15rem;">Experience Colombo's premier destination for bespoke hair,<br class="d-none d-lg-block"> skin, and nail treatments.</p>
+            <div class="hero-animate">
+                <a href="/customers?action=public-register" class="btn btn-lumiere-cta btn-lg text-uppercase">
+                    Book an Appointment <i class="bi bi-calendar-heart ms-2"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+    <!-- Scroll caret -->
+    <div class="position-absolute bottom-0 start-50 translate-middle-x pb-4 text-white opacity-50" style="z-index:2;">
+        <i class="bi bi-chevron-down fs-4 scroll-caret d-block"></i>
+    </div>
+</header>
+
+<!-- ── Marquee Strip ────────────────────────────────────────── -->
+<div class="marquee-strip" aria-hidden="true">
+    <div class="marquee-track">
+        <span>Premium Hair Treatments</span><span class="pip"></span>
+        <span>Award-Winning Stylists</span><span class="pip"></span>
+        <span>Bespoke Skincare</span><span class="pip"></span>
+        <span>Luxury Nail Art</span><span class="pip"></span>
+        <span>Colombo's Finest Salon</span><span class="pip"></span>
+        <span>Est. 2008</span><span class="pip"></span>
+        <span>Premium Hair Treatments</span><span class="pip"></span>
+        <span>Award-Winning Stylists</span><span class="pip"></span>
+        <span>Bespoke Skincare</span><span class="pip"></span>
+        <span>Luxury Nail Art</span><span class="pip"></span>
+        <span>Colombo's Finest Salon</span><span class="pip"></span>
+        <span>Est. 2008</span><span class="pip"></span>
+    </div>
+</div>
+
+<!-- ── Stats Bar ────────────────────────────────────────────── -->
+<div class="stats-bar py-5">
+    <div class="container">
+        <div class="d-flex flex-wrap justify-content-center align-items-center gap-3 gap-md-0">
+            <div class="text-center px-4 px-md-5 sr">
+                <div class="stat-num" data-target="15">0</div>
+                <div class="stat-lbl">Years of Excellence</div>
+            </div>
+            <div class="stat-sep d-none d-md-block sr sr-d1"></div>
+            <div class="text-center px-4 px-md-5 sr sr-d1">
+                <div class="stat-num" data-target="12000">0</div>
+                <div class="stat-lbl">Happy Clients</div>
+            </div>
+            <div class="stat-sep d-none d-md-block sr sr-d2"></div>
+            <div class="text-center px-4 px-md-5 sr sr-d2">
+                <div class="stat-num" data-target="40">0</div>
+                <div class="stat-lbl">Signature Services</div>
+            </div>
+            <div class="stat-sep d-none d-md-block sr sr-d3"></div>
+            <div class="text-center px-4 px-md-5 sr sr-d3">
+                <div class="stat-num" data-target="98">0</div>
+                <div class="stat-lbl">% Satisfaction Rate</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Wave: dark → bg -->
+<span class="wave" style="background:var(--lumiere-bg);">
+    <svg viewBox="0 0 1440 54" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" style="width:100%;height:54px;display:block;">
+        <path d="M0,27 C360,58 1080,-4 1440,27 L1440,54 L0,54 Z" fill="#3d2b34"/>
+    </svg>
+</span>
+
+<!-- ═══════════════════════════════════════════════════════
+     [NEW #3] "WHY LUMIÈRE" FEATURE PILLARS
+     Three trust signals that bridge stats → service cards.
+     Fills the dead content gap that existed in this spot.
+════════════════════════════════════════════════════════ -->
+<section class="pillars-section" aria-label="Why choose Lumière">
+    <div class="container">
+        <div class="text-center mb-5 sr">
+            <span class="eyebrow d-block mb-2">The Lumière Promise</span>
+            <h2 class="display-6 fw-bold">Why Clients Choose Us</h2>
+        </div>
+        <div class="row g-4 justify-content-center pb-4">
+            <div class="col-lg-4 col-md-6 sr">
+                <div class="pillar-card">
+                    <div class="pillar-icon"><i class="bi bi-award"></i></div>
+                    <p class="pillar-title">Master-Certified Artistry</p>
+                    <p class="pillar-text">Every stylist holds international certification and undergoes quarterly training — your hair is always in expert hands.</p>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6 sr sr-d1">
+                <div class="pillar-card">
+                    <div class="pillar-icon"><i class="bi bi-gem"></i></div>
+                    <p class="pillar-title">Curated Premium Products</p>
+                    <p class="pillar-text">We use only professional-grade, ethically sourced products — carefully selected to deliver lasting, visible results.</p>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6 sr sr-d2">
+                <div class="pillar-card">
+                    <div class="pillar-icon"><i class="bi bi-calendar2-check"></i></div>
+                    <p class="pillar-title">Effortless Booking</p>
+                    <p class="pillar-text">Reserve, reschedule, and manage your appointments in seconds — your time matters as much as your style.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ── Services ─────────────────────────────────────────────── -->
+<section id="services" class="py-5" style="background:var(--lumiere-bg);">
+    <div class="container py-4">
+        <div class="text-center mb-5 sr">
+            <span class="eyebrow d-block mb-2">Curated Offerings</span>
+            <h2 class="display-5 fw-bold">Our Signature Services</h2>
+        </div>
+
+        <div class="row g-4">
+            <div th:if="${#lists.isEmpty(services)}" class="col-12 py-5 text-center sr">
+                <i class="bi bi-journal-x fs-1 text-muted opacity-50 mb-3 d-block"></i>
+                <p class="text-muted fs-5">Our service menu is currently being refined. Please check back shortly.</p>
+            </div>
+
+            <div class="col-lg-4 col-md-6 sr"
+                 th:each="service, iStat : ${services}"
+                 th:classappend="${iStat.index == 1 ? ' sr-d1' : (iStat.index == 2 ? ' sr-d2' : '')}"
+                 onclick="window.location.href='/customers?action=public-register'">
+                <div class="card h-100 service-card shadow-sm" style="border-radius:1.5rem;overflow:hidden;border:1px solid rgba(231,199,210,.4);">
+                    <div class="svc-img">
+                        <img th:src="@{'/images/' + ${service.imageFileName}}"
+                             th:alt="${service.name}"
+                             onerror="this.onerror=null;this.src='/images/default-service.png';">
+                        <!-- [NEW #4] Book This overlay — pure CSS, no logic changed -->
+                        <div class="svc-overlay" aria-hidden="true">
+                            <span class="svc-overlay-text">
+                                Book This <i class="bi bi-arrow-right"></i>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="card-body p-4 d-flex flex-column">
+                        <h4 class="h5 fw-bold mb-2" th:text="${service.name}">Service Name</h4>
+                        <p class="text-muted small mb-4 flex-grow-1" th:text="${service.description}">Service description.</p>
+                        <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                            <div>
+                                <span class="d-block text-uppercase mb-1" style="font-size:.62rem;font-weight:800;color:#ad8b97;letter-spacing:1.2px;">Starting From</span>
+                                <span class="fw-bold h5 mb-0" style="color:#6d4c53;">LKR <span th:text="${#numbers.formatDecimal(service.basePrice,1,2)}">0.00</span></span>
+                            </div>
+                            <div class="svc-arrow"><i class="bi bi-arrow-right"></i></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Wave: bg → white -->
+<span class="wave" style="background:#fff;">
+    <svg viewBox="0 0 1440 54" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" style="width:100%;height:54px;display:block;">
+        <path d="M0,27 C480,0 960,54 1440,27 L1440,0 L0,0 Z" fill="var(--lumiere-bg)"/>
+    </svg>
+</span>
+
+<!-- ── Stylists ─────────────────────────────────────────────── -->
+<section id="specialists" class="py-5 bg-white">
+    <div class="container py-4 text-center">
+        <div class="sr mb-5">
+            <span class="eyebrow d-block mb-2">The Artistry Team</span>
+            <h2 class="display-5 fw-bold">Meet Our Master Stylists</h2>
+        </div>
+        <div class="row g-5 justify-content-center">
+            <div class="col-lg-3 col-md-4 col-6 stylist-item sr"
+                 th:each="stylist, iStat : ${stylists}"
+                 th:classappend="${iStat.index == 1 ? ' sr-d1' : (iStat.index == 2 ? ' sr-d2' : (iStat.index == 3 ? ' sr-d3' : ''))}">
+                <img th:src="@{'/images/' + ${stylist.imageFileName}}"
+                     class="stylist-avatar mb-3 d-block mx-auto"
+                     th:alt="${stylist.name}"
+                     onerror="this.onerror=null;this.src='/images/default-stylist.png';">
+                <span class="stylist-chip mb-1" th:text="${stylist.level}">LEVEL</span>
+                <h4 class="h5 fw-bold mt-2 mb-1" th:text="${stylist.name}">Stylist Name</h4>
+                <p class="text-muted small mb-0" th:text="${stylist.specialty}">Specialty</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Wave: white → bg -->
+<span class="wave" style="background:var(--lumiere-bg);">
+    <svg viewBox="0 0 1440 54" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" style="width:100%;height:54px;display:block;">
+        <path d="M0,27 C360,58 1080,-4 1440,27 L1440,0 L0,0 Z" fill="white"/>
+    </svg>
+</span>
+
+<!-- ── Reviews ──────────────────────────────────────────────── -->
+<section id="reviews" class="py-5" style="background:var(--lumiere-bg);">
+    <div class="container py-4">
+        <div class="text-center mb-5 sr">
+            <span class="eyebrow d-block mb-2">Testimonials</span>
+            <h2 class="display-5 fw-bold">Client Experiences</h2>
+        </div>
+        <div class="row justify-content-center">
+            <div class="col-lg-8 sr sr-d1">
+                <div id="reviewCarousel" class="carousel slide" data-bs-ride="carousel">
+                    <div class="carousel-inner">
+                        <div th:each="review, stat : ${reviews}"
+                             th:classappend="${stat.first} ? 'active' : ''"
+                             class="carousel-item text-center py-2">
+                            <i class="bi bi-quote review-quote-icon d-block"></i>
+                            <div class="mb-3 text-warning">
+                                <span th:each="i : ${#numbers.sequence(1, review.rating)}">
+                                    <i class="bi bi-star-fill mx-1" style="font-size:.85rem;"></i>
+                                </span>
+                            </div>
+                            <p class="lead fw-medium px-md-4 mb-4" style="color:#4a3540;" th:text="${'&quot;' + review.comment + '&quot;'}">"Review text"</p>
+                            <div class="d-flex justify-content-center align-items-center gap-2 mb-1">
+                                <h5 class="fw-bold mb-0" style="color:#6d4c53;" th:text="${review.customerName}">— Customer</h5>
+                                <span th:if="${review.verified}" class="badge rounded-pill" style="background:#e8f4fd;color:#007aff;border:1px solid #cce5ff;font-size:.62rem;">
+                                    <i class="bi bi-patch-check-fill me-1"></i>Verified
+                                </span>
+                            </div>
+                            <p class="text-uppercase small mt-1 mb-0 opacity-75" style="font-size:.62rem;letter-spacing:2px;"
+                               th:if="${review.stylistName != null and !review.stylistName.isEmpty()}"
+                               th:text="${'Service by: ' + review.stylistName}"></p>
+                        </div>
+                    </div>
+
+                    <div class="carousel-dot-track" id="carouselDots"></div>
+
+                    <div class="d-flex justify-content-center gap-2 mt-3">
+                        <button class="btn btn-outline-secondary btn-sm rounded-circle" type="button"
+                                data-bs-target="#reviewCarousel" data-bs-slide="prev" style="width:36px;height:36px;">
+                            <i class="bi bi-chevron-left"></i>
+                        </button>
+                        <button class="btn btn-outline-secondary btn-sm rounded-circle" type="button"
+                                data-bs-target="#reviewCarousel" data-bs-slide="next" style="width:36px;height:36px;">
+                            <i class="bi bi-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ── Footer ───────────────────────────────────────────────── -->
+<footer class="pt-5 pb-4 bg-white border-top">
+    <div class="container">
+        <div class="row gy-5">
+            <div class="col-lg-4">
+                <h5 class="footer-logo mb-3">
+                    <div class="logo-circle-sm">L</div> LUMIÈRE SALON
+                </h5>
+                <p class="text-muted small pe-lg-5 lh-lg">Experience Colombo's premier destination for bespoke hair, skin, and nail treatments. Elevating elegance every single day.</p>
+                <div class="d-flex gap-2 mt-4">
+                    <a href="#" class="social-icon" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
+                    <a href="#" class="social-icon" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
+                    <a href="#" class="social-icon" aria-label="WhatsApp"><i class="bi bi-whatsapp"></i></a>
+                </div>
+            </div>
+
+            <div class="col-lg-2 col-6">
+                <h6 class="fw-bold mb-4" style="color:#a66f82;">Explore</h6>
+                <ul class="list-unstyled small">
+                    <li class="mb-3"><a href="#services"    class="text-muted text-decoration-none">Our Menu</a></li>
+                    <li class="mb-3"><a href="#specialists" class="text-muted text-decoration-none">Master Stylists</a></li>
+                    <li class="mb-3"><a href="#reviews"     class="text-muted text-decoration-none">Guest Reviews</a></li>
+                    <li><a th:href="@{/customers(action='login')}" class="text-decoration-none fw-semibold" style="color:var(--lumiere-pink)!important;">Client Login</a></li>
+                </ul>
+            </div>
+
+            <div class="col-lg-3 col-6">
+                <h6 class="fw-bold mb-4" style="color:#a66f82;">Contact</h6>
+                <ul class="list-unstyled small text-muted">
+                    <li class="mb-2"><i class="bi bi-geo-alt me-2"></i>123 Ward Place, Colombo 07</li>
+                    <li class="mb-2"><i class="bi bi-telephone me-2"></i>+94 11 234 5678</li>
+                    <li><i class="bi bi-envelope me-2"></i>hello@lumieresalon.lk</li>
+                </ul>
+            </div>
+
+            <div class="col-lg-3">
+                <h6 class="fw-bold mb-4" style="color:#a66f82;">Salon Hours</h6>
+                <ul class="list-unstyled small text-muted">
+                    <li class="mb-2 d-flex justify-content-between"><span>Mon – Fri</span><span class="fw-medium">9 AM – 8 PM</span></li>
+                    <li class="mb-2 d-flex justify-content-between"><span>Saturday</span><span class="fw-medium">9 AM – 6 PM</span></li>
+                    <li class="d-flex justify-content-between"><span>Sunday</span><span class="text-danger fw-bold" style="font-size:.8rem;">CLOSED</span></li>
+                </ul>
+            </div>
+        </div>
+
+        <hr class="my-5" style="opacity:.08;">
+
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
+            <p class="text-muted mb-3 mb-md-0" style="font-size:.78rem;">&copy; 2026 Lumière Salon Management. Crafting Beauty for the Modern Age.</p>
+            <a href="/staff-login" class="text-muted text-decoration-none" style="font-size:.68rem;letter-spacing:2px;text-transform:uppercase;font-weight:700;">
+                <i class="bi bi-shield-lock me-2"></i>Staff Access
+            </a>
+        </div>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+(function () {
+    'use strict';
+
+    /* ═══════════════════════════════════════════════════
+       [NEW #1] PRELOADER — dismiss on window load (max 2.5s fallback)
+    ════════════════════════════════════════════════════ */
+    const preloader = document.getElementById('preloader');
+    function hidePreloader() { preloader.classList.add('hidden'); }
+    window.addEventListener('load', hidePreloader);
+    setTimeout(hidePreloader, 2500); // Safety fallback
+
+    /* ── EXISTING: Navbar shrink on scroll ── */
+    const nav = document.getElementById('mainNav');
+    window.addEventListener('scroll', () => nav.classList.toggle('nav-scrolled', scrollY > 60), { passive: true });
+
+    /* ── EXISTING: Floating CTA visibility ── */
+    const fab = document.getElementById('fabBtn');
+    window.addEventListener('scroll', () => fab.classList.toggle('show', scrollY > innerHeight * 0.55), { passive: true });
+
+    /* ═══════════════════════════════════════════════════
+       [NEW #5] BACK-TO-TOP button — mirrors FAB timing, different threshold
+    ════════════════════════════════════════════════════ */
+    const backTop = document.getElementById('backTop');
+    window.addEventListener('scroll', () => backTop.classList.toggle('show', scrollY > 400), { passive: true });
+    backTop.addEventListener('click', e => {
+        e.preventDefault();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    /* ── EXISTING: Scroll-reveal (IntersectionObserver) ── */
+    const io = new IntersectionObserver(entries => {
+        entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+    }, { threshold: 0.12, rootMargin: '0px 0px -36px 0px' });
+    document.querySelectorAll('.sr').forEach(el => io.observe(el));
+
+    /* ═══════════════════════════════════════════════════
+       [NEW #2] ACTIVE NAV LINK ON SCROLL
+       Watches each section; highlights the matching nav link.
+    ════════════════════════════════════════════════════ */
+    const navLinks = document.querySelectorAll('.nav-link[data-section]');
+    const sections = ['services', 'specialists', 'reviews'].map(id => document.getElementById(id)).filter(Boolean);
+
+    const navIO = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                navLinks.forEach(a => {
+                    a.classList.toggle('nav-active', a.dataset.section === entry.target.id);
+                });
+            }
+        });
+    }, { threshold: 0.35 });
+    sections.forEach(s => navIO.observe(s));
+
+    /* ── EXISTING: Counter animation ── */
+    function runCounter(el) {
+        const target = +el.dataset.target;
+        const dur = 1800, step = 16, ticks = dur / step;
+        let n = 0;
+        const inc = target / ticks;
+        const t = setInterval(() => {
+            n = Math.min(n + inc, target);
+            const v = Math.round(n);
+            if (target >= 1000) el.textContent = v.toLocaleString() + '+';
+            else if (target === 98) el.textContent = v + '%';
+            else el.textContent = v + '+';
+            if (n >= target) clearInterval(t);
+        }, step);
+    }
+    const cntIO = new IntersectionObserver(entries => {
+        entries.forEach(e => { if (e.isIntersecting) { runCounter(e.target); cntIO.unobserve(e.target); } });
+    }, { threshold: 0.5 });
+    document.querySelectorAll('.stat-num[data-target]').forEach(el => cntIO.observe(el));
+
+    /* ── EXISTING: Carousel custom dots ── */
+    const carousel = document.getElementById('reviewCarousel');
+    const dotsWrap = document.getElementById('carouselDots');
+    if (carousel && dotsWrap) {
+        const items = carousel.querySelectorAll('.carousel-item');
+        if (items.length > 1) {
+            items.forEach((_, i) => {
+                const b = document.createElement('button');
+                b.className = 'cdot' + (i === 0 ? ' active' : '');
+                b.setAttribute('aria-label', 'Slide ' + (i + 1));
+                b.addEventListener('click', () => bootstrap.Carousel.getOrCreateInstance(carousel).to(i));
+                dotsWrap.appendChild(b);
+            });
+            carousel.addEventListener('slid.bs.carousel', e => {
+                dotsWrap.querySelectorAll('.cdot').forEach((d, i) => d.classList.toggle('active', i === e.to));
+            });
+        }
+    }
+})();
+</script>
+</body>
+</html>
